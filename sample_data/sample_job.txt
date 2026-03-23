@@ -1,0 +1,45 @@
+Software Developer Co-op / Intern
+Location: Remote (Canada)
+
+About the Role:
+We are looking for a motivated Computer Science student to join our engineering team
+for a 4-month co-op term. You will work alongside senior developers building and
+maintaining our web platform.
+
+Responsibilities:
+- Design, develop, and maintain features for our web application
+- Write clean, testable code following best practices
+- Participate in agile sprint planning and daily standups
+- Collaborate with backend and frontend teams
+- Write unit tests and integration tests
+- Contribute to code reviews and technical documentation
+
+Required Skills:
+- Proficiency in Python or JavaScript
+- Experience with React or similar frontend framework
+- Understanding of REST API design and development
+- SQL database experience (PostgreSQL or MySQL)
+- Git version control
+- Object-oriented programming principles
+- Agile/Scrum development process
+
+Nice to Have:
+- TypeScript experience
+- Docker and containerization
+- CI/CD pipeline experience (GitHub Actions, Jenkins)
+- Cloud platform experience (AWS, GCP, Azure)
+- Node.js backend development
+- Machine learning or AI API integration
+- Redis or caching technologies
+
+We are looking for someone who:
+- Has strong problem-solving and analytical skills
+- Communicates clearly and works well in a team
+- Is a fast learner who adapts to new technologies
+- Takes initiative and is self-motivated
+- Has attention to detail
+
+Qualifications:
+- Currently enrolled in Computer Science, Software Engineering, or related program
+- Completed at least 2 years of undergraduate study
+- Eligible to work in Canada
