@@ -3,1689 +3,997 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Algorithm Visualizer — by Vedant Kadam</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<title>ATS Scanner — Resume Analyzer by Vedant Kadam</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:       #f0f2f7;
-  --surface:  #ffffff;
-  --surface2: #f8f9fc;
-  --border:   #e2e6ef;
-  --border2:  #c8cfe0;
-  --text:     #1a1d2e;
-  --muted:    #6b7590;
-  --muted2:   #9aa0b8;
-
-  --blue:     #3b6bff;
-  --blue-dim: rgba(59,107,255,.1);
-  --green:    #00b87a;
-  --green-dim:rgba(0,184,122,.1);
-  --red:      #ff3d5a;
-  --red-dim:  rgba(255,61,90,.1);
+  --bg:       #080c14;
+  --bg1:      #0d1220;
+  --bg2:      #111827;
+  --bg3:      #18212f;
+  --card:     #0f1624;
+  --border:   rgba(255,255,255,.07);
+  --border2:  rgba(255,255,255,.12);
+  --accent:   #f97316;
+  --accent2:  #fb923c;
+  --adim:     rgba(249,115,22,.12);
+  --aglow:    rgba(249,115,22,.25);
+  --green:    #10b981;
+  --gdim:     rgba(16,185,129,.1);
+  --red:      #ef4444;
+  --rdim:     rgba(239,68,68,.1);
+  --blue:     #3b82f6;
+  --bdim:     rgba(59,130,246,.1);
   --yellow:   #f59e0b;
-  --yel-dim:  rgba(245,158,11,.1);
-  --purple:   #7c3aed;
-  --pur-dim:  rgba(124,58,237,.1);
-  --orange:   #ea580c;
-
-  --bar-default:   #cbd5e8;
-  --bar-compare:   #3b6bff;
-  --bar-swap:      #ff3d5a;
-  --bar-sorted:    #00b87a;
-  --bar-pivot:     #f59e0b;
-  --bar-current:   #7c3aed;
-  --bar-found:     #00b87a;
-  --bar-visited:   #94a3b8;
-
-  --mono: 'DM Mono', monospace;
-  --sans: 'DM Sans', sans-serif;
-  --radius: 12px;
-  --shadow: 0 2px 12px rgba(26,29,46,.08);
-  --shadow-lg: 0 8px 32px rgba(26,29,46,.12);
+  --ydim:     rgba(245,158,11,.1);
+  --purple:   #8b5cf6;
+  --text:     #f1f5f9;
+  --muted:    #475569;
+  --muted2:   #64748b;
+  --muted3:   #94a3b8;
+  --mono:     'Fira Code', monospace;
+  --sans:     'Outfit', sans-serif;
+  --r:        12px;
 }
-
-* { margin:0; padding:0; box-sizing:border-box; }
-html { scroll-behavior:smooth; }
-body {
-  background:var(--bg);
-  color:var(--text);
-  font-family:var(--sans);
-  min-height:100vh;
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:var(--sans);min-height:100vh;
   overflow-x:hidden;
 }
 
+/* ── NOISE TEXTURE ── */
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;
+}
+
+/* ── AMBIENT ORBS ── */
+.orb{position:fixed;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0;}
+.o1{width:700px;height:700px;background:rgba(249,115,22,.04);top:-300px;right:-200px;}
+.o2{width:500px;height:500px;background:rgba(59,130,246,.03);bottom:-200px;left:-150px;}
+
 /* ── HEADER ── */
-.header {
-  background:var(--surface);
+header{
+  position:relative;z-index:20;
+  padding:0 40px;height:60px;
+  background:rgba(8,12,20,.9);
   border-bottom:1px solid var(--border);
-  padding:0 24px;
-  height:56px;
+  backdrop-filter:blur(20px);
   display:flex;align-items:center;gap:16px;
-  position:sticky;top:0;z-index:100;
-  box-shadow:var(--shadow);
 }
-.logo {
-  display:flex;align-items:center;gap:10px;
-  font-family:var(--mono);font-size:15px;font-weight:500;
-  letter-spacing:-.3px;
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-icon{
+  width:32px;height:32px;background:var(--accent);
+  border-radius:9px;display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:800;color:#fff;font-family:var(--mono);
 }
-.logo-mark {
-  width:30px;height:30px;background:var(--blue);
-  border-radius:8px;display:flex;align-items:center;justify-content:center;
-  color:#fff;font-size:14px;font-weight:700;
-}
-.logo-sep { color:var(--border2); }
-.algo-tabs {
-  display:flex;gap:2px;background:var(--bg);
-  border-radius:10px;padding:3px;margin-left:8px;
-}
-.algo-tab {
-  padding:5px 14px;border-radius:8px;font-size:12px;font-weight:500;
-  cursor:pointer;transition:all .15s;color:var(--muted);
-  border:none;background:transparent;font-family:var(--sans);
-}
-.algo-tab:hover { color:var(--text); }
-.algo-tab.active {
-  background:var(--surface);color:var(--blue);
-  box-shadow:var(--shadow);font-weight:600;
-}
-.header-right { margin-left:auto;display:flex;align-items:center;gap:10px; }
-.by-tag {
-  font-size:11px;color:var(--muted);font-family:var(--mono);
-}
-.by-tag a { color:var(--blue);text-decoration:none;font-weight:500; }
-.by-tag a:hover { text-decoration:underline; }
+.logo-name{font-size:17px;font-weight:700;letter-spacing:-.4px;}
+.logo-name span{color:var(--accent);}
+.logo-tag{font-size:11px;color:var(--muted3);font-family:var(--mono);background:var(--bg3);border:1px solid var(--border2);padding:2px 9px;border-radius:20px;margin-left:4px;}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
+.hdr-by{font-size:12px;color:var(--muted2);}
+.hdr-by a{color:var(--accent);text-decoration:none;font-weight:600;}
+.hdr-by a:hover{text-decoration:underline;}
+.hdr-badge{font-size:11px;font-family:var(--mono);color:var(--green);background:var(--gdim);border:1px solid rgba(16,185,129,.2);padding:3px 10px;border-radius:20px;}
 
-/* ── ALGO SELECTOR ── */
-.algo-name {
-  font-family:var(--mono);font-size:13px;color:var(--blue);
-  background:var(--blue-dim);border:1px solid rgba(59,107,255,.2);
-  padding:4px 12px;border-radius:20px;
-  cursor:pointer;transition:all .15s;
+/* ── HERO ── */
+.hero{
+  position:relative;z-index:10;
+  text-align:center;padding:60px 20px 48px;
 }
-.algo-name:hover { background:rgba(59,107,255,.18); }
+.hero-chip{
+  display:inline-block;font-family:var(--mono);font-size:11px;
+  color:var(--accent);background:var(--adim);
+  border:1px solid rgba(249,115,22,.25);
+  padding:5px 16px;border-radius:20px;margin-bottom:22px;letter-spacing:.5px;
+}
+.hero h1{
+  font-size:clamp(32px,5.5vw,58px);font-weight:800;
+  letter-spacing:-2px;line-height:1.05;margin-bottom:16px;
+}
+.hero h1 .acc{color:var(--accent);}
+.hero h1 .dim{color:var(--muted2);}
+.hero-sub{
+  font-size:17px;color:var(--muted3);max-width:540px;
+  margin:0 auto 40px;line-height:1.7;font-weight:300;
+}
+.hero-stats{
+  display:flex;justify-content:center;gap:32px;flex-wrap:wrap;
+}
+.hs{text-align:center;}
+.hs-num{font-size:24px;font-weight:800;color:var(--accent);font-family:var(--mono);}
+.hs-lbl{font-size:11px;color:var(--muted2);margin-top:2px;letter-spacing:.5px;}
 
-/* ── MAIN LAYOUT ── */
-.main {
-  max-width:1400px;margin:0 auto;
-  padding:20px 20px 40px;
-  display:grid;
-  grid-template-columns:1fr 320px;
-  grid-template-rows:auto auto auto auto;
-  gap:16px;
+/* ── APP SHELL ── */
+.app{
+  position:relative;z-index:10;
+  max-width:1300px;margin:0 auto;padding:0 20px 60px;
 }
 
-/* ── ALGO INFO CARD ── */
-.info-card {
-  grid-column:1/3;
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  padding:18px 22px;
-  display:grid;
-  grid-template-columns:1fr auto;
-  gap:16px;align-items:center;
-  box-shadow:var(--shadow);
+/* ── INPUT SECTION ── */
+.input-section{margin-bottom:24px;}
+.input-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.input-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;
+  transition:border-color .2s;
 }
-.algo-title { font-size:20px;font-weight:700;margin-bottom:4px; }
-.algo-desc { font-size:13px;color:var(--muted);line-height:1.6;max-width:640px; }
-.complexity-grid {
-  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;min-width:360px;
-}
-.cx-box {
-  background:var(--surface2);border:1px solid var(--border);
-  border-radius:8px;padding:8px 12px;text-align:center;
-}
-.cx-label { font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px; }
-.cx-val { font-family:var(--mono);font-size:14px;font-weight:600; }
-.cx-val.good { color:var(--green); }
-.cx-val.ok { color:var(--yellow); }
-.cx-val.bad { color:var(--red); }
-.cx-val.blue { color:var(--blue); }
-
-/* ── VISUALIZER CARD ── */
-.viz-card {
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
-  overflow:hidden;
-  display:flex;flex-direction:column;
-}
-.viz-header {
-  padding:12px 18px;
-  border-bottom:1px solid var(--border);
-  display:flex;align-items:center;gap:10px;
-  background:var(--surface2);
-}
-.viz-title { font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px; }
-.viz-body { padding:20px 18px;flex:1; }
-
-/* ── ARRAY DISPLAY ── */
-.array-state {
-  background:var(--surface2);
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:12px 16px;
-  margin-bottom:16px;
-  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
-}
-.arr-label { font-size:11px;color:var(--muted);font-family:var(--mono);font-weight:500;margin-right:4px;flex-shrink:0; }
-.arr-cell {
-  display:flex;flex-direction:column;align-items:center;gap:3px;
-  min-width:36px;
-}
-.arr-val {
-  width:36px;height:36px;border-radius:8px;
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--mono);font-size:13px;font-weight:600;
-  background:var(--bar-default);color:var(--text);
-  transition:all .3s ease;border:2px solid transparent;
-  position:relative;
-}
-.arr-val.comparing { background:var(--blue);color:#fff;border-color:rgba(59,107,255,.5);transform:translateY(-3px); }
-.arr-val.swapping  { background:var(--red);color:#fff;border-color:rgba(255,61,90,.5);transform:translateY(-5px); }
-.arr-val.sorted    { background:var(--green);color:#fff; }
-.arr-val.pivot     { background:var(--yellow);color:#fff;border-color:rgba(245,158,11,.5); }
-.arr-val.current   { background:var(--purple);color:#fff;transform:translateY(-3px); }
-.arr-val.found     { background:var(--green);color:#fff;animation:pulse .5s ease; }
-.arr-idx { font-size:9px;color:var(--muted2);font-family:var(--mono); }
-.arr-pointer {
-  font-size:9px;font-weight:700;font-family:var(--mono);
-  padding:1px 5px;border-radius:4px;margin-top:1px;
-}
-.ptr-i { background:var(--blue-dim);color:var(--blue); }
-.ptr-j { background:var(--red-dim);color:var(--red); }
-.ptr-p { background:var(--yel-dim);color:var(--yellow); }
-.ptr-lo { background:var(--pur-dim);color:var(--purple); }
-.ptr-hi { background:var(--green-dim);color:var(--green); }
-@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.2)} }
-
-/* ── BAR CHART ── */
-.bars-wrap {
-  height:200px;
-  display:flex;align-items:flex-end;gap:3px;
-  padding-bottom:4px;
-  position:relative;
-}
-.bar {
-  flex:1;border-radius:4px 4px 0 0;
-  transition:height .25s ease, background .25s ease;
-  position:relative;cursor:default;
-  min-width:4px;
-}
-.bar::after {
-  content:attr(data-val);
-  position:absolute;top:-18px;left:50%;transform:translateX(-50%);
-  font-size:9px;font-family:var(--mono);color:var(--muted);
-  opacity:0;transition:opacity .15s;white-space:nowrap;
-}
-.bar:hover::after { opacity:1; }
-.bar.comparing { background:var(--bar-compare) !important; }
-.bar.swapping  { background:var(--bar-swap) !important; }
-.bar.sorted    { background:var(--bar-sorted) !important; }
-.bar.pivot     { background:var(--bar-pivot) !important; }
-.bar.current   { background:var(--bar-current) !important; }
-.bar.visited   { background:var(--bar-visited) !important; }
-.bar.found     { background:var(--bar-found) !important; }
-
-/* ── CONTROLS ── */
-.controls {
-  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
-  margin-top:14px;padding-top:14px;
-  border-top:1px solid var(--border);
-}
-.ctrl-btn {
-  display:flex;align-items:center;gap:6px;
-  padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;
-  border:none;cursor:pointer;transition:all .15s;font-family:var(--sans);
-}
-.btn-primary { background:var(--blue);color:#fff; }
-.btn-primary:hover { background:#2d5be8;transform:translateY(-1px);box-shadow:0 4px 14px rgba(59,107,255,.3); }
-.btn-primary:disabled { opacity:.45;cursor:not-allowed;transform:none;box-shadow:none; }
-.btn-secondary { background:var(--surface2);color:var(--text);border:1px solid var(--border); }
-.btn-secondary:hover { background:var(--border);border-color:var(--border2); }
-.btn-danger { background:var(--red-dim);color:var(--red);border:1px solid rgba(255,61,90,.2); }
-.btn-danger:hover { background:rgba(255,61,90,.2); }
-.btn-success { background:var(--green-dim);color:var(--green);border:1px solid rgba(0,184,122,.2); }
-
-.speed-wrap { display:flex;align-items:center;gap:8px;margin-left:auto; }
-.speed-label { font-size:11px;color:var(--muted);font-family:var(--mono); }
-input[type=range] {
-  -webkit-appearance:none;width:100px;height:4px;
-  background:var(--border);border-radius:2px;outline:none;cursor:pointer;
-}
-input[type=range]::-webkit-slider-thumb {
-  -webkit-appearance:none;width:14px;height:14px;border-radius:50%;
-  background:var(--blue);cursor:pointer;
-}
-.size-wrap { display:flex;align-items:center;gap:8px; }
-.size-label { font-size:11px;color:var(--muted);font-family:var(--mono); }
-.size-val { font-family:var(--mono);font-size:12px;color:var(--blue);font-weight:600;min-width:24px; }
-
-/* Custom array input */
-.custom-input-wrap {
-  display:flex;align-items:center;gap:8px;margin-top:10px;
-}
-.custom-input {
-  flex:1;background:var(--surface2);border:1px solid var(--border);
-  border-radius:8px;color:var(--text);font-family:var(--mono);
-  font-size:12px;padding:7px 12px;outline:none;transition:border-color .15s;
-}
-.custom-input:focus { border-color:var(--blue); }
-.custom-input::placeholder { color:var(--muted2); }
-
-/* ── STEP PANEL ── */
-.step-card {
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
-  overflow:hidden;
-}
-.step-header {
-  padding:12px 16px;background:var(--surface2);border-bottom:1px solid var(--border);
+.input-card:focus-within{border-color:rgba(249,115,22,.3);}
+.ic-head{
+  padding:13px 16px;background:var(--bg2);border-bottom:1px solid var(--border);
   display:flex;align-items:center;gap:8px;
 }
-.step-title { font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;flex:1; }
-.step-counter {
-  font-family:var(--mono);font-size:11px;
-  background:var(--blue-dim);color:var(--blue);
-  padding:2px 8px;border-radius:20px;
+.ic-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);}
+.ic-title{font-size:12px;font-weight:600;color:var(--muted3);text-transform:uppercase;letter-spacing:.8px;flex:1;}
+.tab-pair{display:flex;gap:4px;}
+.tp-btn{
+  font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border2);
+  background:transparent;color:var(--muted2);cursor:pointer;transition:all .15s;
+  font-family:var(--sans);
 }
-.step-body { padding:14px 16px; }
-.step-action {
-  font-size:14px;font-weight:600;line-height:1.4;
-  margin-bottom:8px;min-height:22px;
-}
-.step-detail {
-  font-size:12px;color:var(--muted);line-height:1.6;
-  margin-bottom:12px;min-height:38px;
-}
-.step-vars {
-  display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;min-height:28px;
-}
-.var-chip {
-  font-family:var(--mono);font-size:11px;
-  padding:3px 9px;border-radius:6px;
-  background:var(--surface2);border:1px solid var(--border);
-}
-.var-chip .vk { color:var(--muted); }
-.var-chip .vv { font-weight:600;color:var(--blue); }
+.tp-btn:hover{border-color:var(--accent);color:var(--accent);}
+.tp-btn.on{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600;}
 
-/* Stats row */
-.stats-row {
-  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
-  padding-top:12px;border-top:1px solid var(--border);
+/* Upload zone */
+.upload-zone{
+  margin:14px;border:2px dashed var(--border2);border-radius:10px;
+  padding:28px 20px;text-align:center;cursor:pointer;
+  transition:all .2s;
 }
-.stat-box {
-  text-align:center;padding:8px;background:var(--surface2);border-radius:8px;
-  border:1px solid var(--border);
-}
-.stat-num { font-family:var(--mono);font-size:18px;font-weight:700;color:var(--blue); }
-.stat-lbl { font-size:10px;color:var(--muted);margin-top:2px; }
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:var(--adim);}
+.upload-zone.has{border-color:var(--green);background:var(--gdim);}
+.uz-icon{font-size:28px;margin-bottom:8px;}
+.uz-text{font-size:13px;color:var(--muted3);}
+.uz-text strong{color:var(--accent);cursor:pointer;}
+.uz-hint{font-size:11px;color:var(--muted);margin-top:5px;font-family:var(--mono);}
+.uz-fname{font-size:12px;color:var(--green);margin-top:6px;font-family:var(--mono);}
+input[type=file]{display:none;}
 
-/* ── PSEUDOCODE ── */
-.pseudo-card {
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
-  overflow:hidden;
+/* Textarea */
+textarea.ta{
+  flex:1;background:transparent;border:none;outline:none;
+  resize:none;color:var(--text);font-family:var(--mono);
+  font-size:12px;line-height:1.7;padding:14px;min-height:180px;
 }
-.pseudo-header {
-  padding:12px 16px;background:var(--surface2);border-bottom:1px solid var(--border);
+textarea.ta::placeholder{color:var(--muted);}
+textarea.ta::-webkit-scrollbar{width:4px;}
+textarea.ta::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+/* ── ACTION BAR ── */
+.action-bar{display:flex;align-items:center;justify-content:center;gap:12px;}
+.scan-btn{
+  display:flex;align-items:center;gap:9px;
+  background:var(--accent);color:#fff;border:none;
+  border-radius:10px;padding:13px 36px;
+  font-family:var(--sans);font-size:15px;font-weight:700;
+  cursor:pointer;transition:all .2s;letter-spacing:-.2px;
+  position:relative;overflow:hidden;
+}
+.scan-btn::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);
+  opacity:0;transition:opacity .2s;
+}
+.scan-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px var(--aglow);}
+.scan-btn:hover::before{opacity:1;}
+.scan-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none;}
+.scan-btn .sp{
+  width:14px;height:14px;border:2px solid rgba(255,255,255,.3);
+  border-top-color:#fff;border-radius:50%;
+  animation:spin .6s linear infinite;display:none;
+}
+.scan-btn.loading .sp{display:block;}
+.scan-btn.loading .sl{opacity:.6;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.clear-btn{
+  background:transparent;color:var(--muted3);border:1px solid var(--border2);
+  border-radius:10px;padding:13px 22px;
+  font-family:var(--sans);font-size:14px;cursor:pointer;transition:all .2s;
+}
+.clear-btn:hover{border-color:var(--red);color:var(--red);}
+
+/* ── EMPTY STATE ── */
+.empty-state{
+  text-align:center;padding:80px 20px;
+}
+.es-icon{font-size:52px;margin-bottom:18px;opacity:.3;}
+.es-title{font-size:18px;font-weight:600;color:var(--muted2);margin-bottom:8px;}
+.es-sub{font-size:14px;color:var(--muted);max-width:380px;margin:0 auto;line-height:1.7;}
+
+/* ── RESULTS ── */
+#results{display:none;}
+
+/* Score hero */
+.score-hero{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);padding:28px 32px;
+  margin-bottom:20px;
+  display:grid;grid-template-columns:auto 1fr auto;
+  gap:28px;align-items:center;
+  position:relative;overflow:hidden;
+}
+.score-hero::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--accent),var(--yellow));
+}
+.score-ring-wrap{position:relative;width:96px;height:96px;flex-shrink:0;}
+.score-ring-wrap svg{transform:rotate(-90deg);}
+.sr-bg{fill:none;stroke:rgba(255,255,255,.07);stroke-width:7;}
+.sr-fill{fill:none;stroke-width:7;stroke-linecap:round;transition:stroke-dashoffset 1.4s cubic-bezier(.4,0,.2,1);}
+.score-num-wrap{
+  position:absolute;inset:0;display:flex;
+  flex-direction:column;align-items:center;justify-content:center;
+}
+.score-pct{font-family:var(--mono);font-size:22px;font-weight:700;line-height:1;}
+.score-grade{font-family:var(--mono);font-size:11px;color:var(--muted2);margin-top:2px;}
+
+.score-info h2{font-size:22px;font-weight:700;margin-bottom:5px;letter-spacing:-.4px;}
+.score-msg{font-size:13px;color:var(--muted3);line-height:1.6;margin-bottom:14px;max-width:420px;}
+.score-pills{display:flex;gap:8px;flex-wrap:wrap;}
+.pill{
+  font-family:var(--mono);font-size:11px;padding:4px 11px;
+  border-radius:20px;border:1px solid;
+}
+.pill-g{color:var(--green);border-color:rgba(16,185,129,.3);background:var(--gdim);}
+.pill-r{color:var(--red);border-color:rgba(239,68,68,.3);background:var(--rdim);}
+.pill-y{color:var(--yellow);border-color:rgba(245,158,11,.3);background:var(--ydim);}
+.pill-b{color:var(--blue);border-color:rgba(59,130,246,.3);background:var(--bdim);}
+.pill-o{color:var(--accent);border-color:rgba(249,115,22,.3);background:var(--adim);}
+
+/* Progress bar */
+.prog-wrap{margin-top:16px;}
+.prog-track{height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:3px;transition:width 1.4s cubic-bezier(.4,0,.2,1);}
+
+/* ── SCORE QUICK STATS ── */
+.quick-stats{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+  text-align:center;
+}
+.qs-box{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:10px;padding:14px 10px;
+}
+.qs-num{font-family:var(--mono);font-size:20px;font-weight:700;line-height:1;}
+.qs-lbl{font-size:11px;color:var(--muted2);margin-top:3px;letter-spacing:.3px;}
+
+/* ── RESULTS GRID ── */
+.results-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.full{grid-column:1/-1;}
+.panel{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);overflow:hidden;
+}
+.panel-head{
+  padding:13px 16px;background:var(--bg2);border-bottom:1px solid var(--border);
   display:flex;align-items:center;gap:8px;
 }
-.pseudo-title { font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px; }
-.pseudo-body { padding:14px 16px; }
-.pline {
-  font-family:var(--mono);font-size:11.5px;line-height:1.9;
-  color:var(--muted2);padding:1px 8px;border-radius:4px;
-  transition:all .2s;border-left:3px solid transparent;
-  display:block;
+.ph-icon{font-size:14px;}
+.ph-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;}
+.ph-count{
+  font-family:var(--mono);font-size:11px;padding:2px 8px;
+  border-radius:20px;background:rgba(255,255,255,.07);color:var(--muted3);
+  margin-left:auto;
 }
-.pline.active {
-  background:var(--blue-dim);color:var(--text);
-  border-left-color:var(--blue);font-weight:500;
-}
-.pline .kw { color:var(--blue);font-weight:600; }
-.pline .fn { color:var(--purple); }
-.pline .cm { color:var(--muted2);font-style:italic; }
-.pline .num { color:var(--orange); }
-.pline .op { color:var(--red); }
+.panel-body{padding:16px;}
 
-/* ── LEGEND ── */
-.legend {
-  display:flex;flex-wrap:wrap;gap:8px;
-  padding:10px 16px;background:var(--surface2);
-  border-top:1px solid var(--border);
+/* ── KEYWORD TAGS ── */
+.cat-block{margin-bottom:14px;}
+.cat-block:last-child{margin-bottom:0;}
+.cat-label{
+  font-size:10px;font-weight:600;color:var(--muted);
+  text-transform:uppercase;letter-spacing:1px;
+  margin-bottom:8px;display:flex;align-items:center;gap:6px;
 }
-.leg-item { display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted); }
-.leg-dot { width:10px;height:10px;border-radius:3px;flex-shrink:0; }
+.tags-row{display:flex;flex-wrap:wrap;gap:6px;}
+.tag{
+  font-family:var(--mono);font-size:11px;
+  padding:4px 10px;border-radius:6px;border:1px solid;
+  display:inline-flex;align-items:center;gap:5px;
+  animation:tagPop .25s ease both;
+}
+@keyframes tagPop{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+.tag-match{color:var(--green);border-color:rgba(16,185,129,.3);background:var(--gdim);}
+.tag-match::before{content:'✓';}
+.tag-miss{color:var(--red);border-color:rgba(239,68,68,.3);background:var(--rdim);}
+.tag-miss::before{content:'✗';}
+.tag-bonus{color:var(--blue);border-color:rgba(59,130,246,.3);background:var(--bdim);}
+.tag-bonus::before{content:'+';}
+.no-items{font-size:12px;color:var(--muted);font-style:italic;padding:4px 0;}
 
-/* ── GRAPH SECTION ── */
-.graph-wrap {
-  position:relative;min-height:260px;
-  background:var(--surface2);border-radius:10px;
-  border:1px solid var(--border);overflow:hidden;margin-bottom:16px;
+/* ── SECTION CHECKER ── */
+.section-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.sec-item{
+  padding:11px 13px;background:var(--bg3);border-radius:9px;
+  display:flex;align-items:center;gap:9px;font-size:12px;
+  border:1px solid var(--border);transition:border-color .2s;
 }
-.graph-canvas { width:100%;height:260px; }
-.node {
-  position:absolute;width:40px;height:40px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--mono);font-size:13px;font-weight:600;
-  border:2px solid transparent;transition:all .3s;
-  background:var(--bar-default);color:var(--text);cursor:default;
-  transform:translate(-50%,-50%);
+.sec-item.ok{border-color:rgba(16,185,129,.2);}
+.sec-item.miss{border-color:rgba(239,68,68,.2);}
+.sec-icon{font-size:14px;}
+.sec-status{
+  margin-left:auto;font-size:10px;font-family:var(--mono);
 }
-.node.visited { background:var(--bar-visited);color:#fff; }
-.node.current { background:var(--blue);color:#fff;transform:translate(-50%,-50%) scale(1.2); }
-.node.found   { background:var(--green);color:#fff; }
-.node.queued  { background:var(--yellow);color:#fff; }
-.node.path    { background:var(--green);color:#fff;border-color:rgba(0,184,122,.5); }
-.node.start   { background:var(--blue);color:#fff; }
-.node.end     { background:var(--red);color:#fff; }
+.sec-status.ok{color:var(--green);}
+.sec-status.miss{color:var(--red);}
 
-/* ── TABS ── */
-.section-tabs {
-  display:flex;gap:2px;background:var(--bg);
-  border-radius:10px;padding:3px;margin-bottom:16px;
+/* ── PHRASES ── */
+.phrase-item{
+  font-family:var(--mono);font-size:12px;
+  color:var(--muted3);padding:8px 12px;
+  background:var(--bg3);border-radius:7px;
+  border-left:3px solid var(--yellow);
+  margin-bottom:6px;
 }
-.stab {
-  flex:1;padding:6px;text-align:center;border-radius:8px;
-  font-size:12px;font-weight:500;cursor:pointer;
-  color:var(--muted);transition:all .15s;border:none;
-  background:transparent;font-family:var(--sans);
-}
-.stab.active {
-  background:var(--surface);color:var(--blue);
-  box-shadow:var(--shadow);font-weight:600;
-}
+.phrase-item::before{content:'→ ';color:var(--yellow);}
+.phrase-item:last-child{margin-bottom:0;}
 
-/* ── KEY CONCEPTS ── */
-.concepts-grid {
-  grid-column:1/3;
-  display:grid;grid-template-columns:repeat(4,1fr);gap:12px;
+/* ── RECOMMENDATIONS ── */
+.rec-item{
+  display:flex;gap:13px;padding:13px;
+  background:var(--bg3);border-radius:10px;
+  margin-bottom:9px;border:1px solid var(--border);
+  animation:fadeUp .4s ease both;
 }
-.concept-card {
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius);padding:16px;
-  box-shadow:var(--shadow);
+.rec-item:last-child{margin-bottom:0;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.rec-num{
+  font-family:var(--mono);font-size:13px;font-weight:700;
+  color:var(--accent);flex-shrink:0;min-width:20px;
 }
-.cc-icon { font-size:24px;margin-bottom:8px; }
-.cc-title { font-size:13px;font-weight:700;margin-bottom:4px; }
-.cc-body { font-size:11.5px;color:var(--muted);line-height:1.6; }
+.rec-text{font-size:13px;color:var(--muted3);line-height:1.65;}
+.rec-text strong{color:var(--text);}
+
+/* ── TIPS PANEL ── */
+.tip-row{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:10px 0;border-bottom:1px solid var(--border);
+  font-size:12px;color:var(--muted3);line-height:1.6;
+}
+.tip-row:last-child{border-bottom:none;}
+.tip-bullet{color:var(--accent);font-size:14px;flex-shrink:0;margin-top:1px;}
 
 /* ── FOOTER ── */
-footer {
-  text-align:center;padding:24px;
-  font-size:12px;color:var(--muted);
-  border-top:1px solid var(--border);background:var(--surface);
-  font-family:var(--mono);
+footer{
+  position:relative;z-index:10;
+  text-align:center;padding:28px;
+  font-family:var(--mono);font-size:11px;color:var(--muted);
+  border-top:1px solid var(--border);
 }
-footer a { color:var(--blue);text-decoration:none; }
+footer a{color:var(--accent);text-decoration:none;}
 
-/* ── DONE BANNER ── */
-.done-banner {
-  display:none;
-  background:var(--green-dim);border:1px solid rgba(0,184,122,.3);
-  border-radius:8px;padding:10px 14px;
-  font-size:13px;color:var(--green);font-weight:600;
-  text-align:center;margin-top:10px;
-  animation:fadeIn .4s ease;
+/* ── BRAND PILL ── */
+.brand{
+  position:fixed;bottom:24px;right:20px;z-index:50;
+  display:flex;align-items:center;gap:8px;
+  background:rgba(8,12,20,.95);border:1px solid var(--border2);
+  border-radius:20px;padding:7px 14px;backdrop-filter:blur(12px);
+  font-size:11px;font-family:var(--mono);
+  box-shadow:0 4px 20px rgba(0,0,0,.4);
 }
-@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.brand a{color:var(--accent);text-decoration:none;font-weight:600;}
+.brand a:hover{text-decoration:underline;}
+.brand-sep{color:var(--muted);}
 
-@media(max-width:1100px){
-  .main{grid-template-columns:1fr;grid-template-rows:auto;}
-  .info-card,.concepts-grid{grid-column:1;}
-  .complexity-grid{min-width:unset;grid-template-columns:repeat(2,1fr);}
-  .concepts-grid{grid-template-columns:repeat(2,1fr);}
-}
-@media(max-width:700px){
-  .algo-tabs{display:none;}
-  .concepts-grid{grid-template-columns:1fr;}
+@media(max-width:900px){
+  header{padding:0 20px;}
+  .hero{padding:44px 20px 36px;}
+  .input-grid,.results-grid{grid-template-columns:1fr;}
+  .full{grid-column:1;}
+  .score-hero{grid-template-columns:1fr;text-align:center;}
+  .score-ring-wrap{margin:0 auto;}
+  .score-pills{justify-content:center;}
+  .quick-stats{grid-template-columns:repeat(3,1fr);}
+  .section-grid{grid-template-columns:repeat(2,1fr);}
+  .brand{display:none;}
 }
 </style>
 </head>
 <body>
 
+<div class="orb o1"></div>
+<div class="orb o2"></div>
+
 <!-- Header -->
-<div class="header">
+<header>
   <div class="logo">
-    <div class="logo-mark">AV</div>
-    Algorithm Visualizer
-  </div>
-  <span class="logo-sep">|</span>
-  <div class="algo-tabs" id="mainTabs">
-    <button class="algo-tab active" onclick="switchCategory('sorting',this)">Sorting</button>
-    <button class="algo-tab" onclick="switchCategory('graph',this)">Graph</button>
+    <div class="logo-icon">A</div>
+    <div class="logo-name">ATS<span>Scanner</span></div>
+    <span class="logo-tag">v2.0</span>
   </div>
   <div class="header-right">
-    <span class="by-tag">Built by <a href="https://github.com/iamvk07" target="_blank">Vedant Kadam</a></span>
+    <span class="hdr-by">Built by <a href="https://github.com/iamvk07" target="_blank">Vedant Kadam</a></span>
+    <span class="hdr-badge">Free · No Login</span>
+  </div>
+</header>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-chip">200+ keyword taxonomy · 8 categories · Weighted scoring</div>
+  <h1>Will your resume <span class="acc">pass</span><br>the <span class="dim">ATS filter?</span></h1>
+  <p class="hero-sub">Paste your resume and job description. Get a match score, missing keywords, and exactly what to fix — in seconds.</p>
+  <div class="hero-stats">
+    <div class="hs"><div class="hs-num">200+</div><div class="hs-lbl">Keywords</div></div>
+    <div class="hs"><div class="hs-num">8</div><div class="hs-lbl">Categories</div></div>
+    <div class="hs"><div class="hs-num">0</div><div class="hs-lbl">Signup needed</div></div>
+    <div class="hs"><div class="hs-num">100%</div><div class="hs-lbl">Free forever</div></div>
   </div>
 </div>
 
-<div class="main">
+<div class="app">
 
-  <!-- Info card -->
-  <div class="info-card" id="infoCard">
-    <div>
-      <div class="algo-title" id="algoTitle">Bubble Sort</div>
-      <div class="algo-desc" id="algoDesc">Repeatedly steps through the array, compares adjacent elements, and swaps them if they're in the wrong order. The largest unsorted element "bubbles up" to its correct position each pass.</div>
+  <!-- Input section -->
+  <div class="input-section">
+    <div class="input-grid">
+
+      <!-- Resume -->
+      <div class="input-card" id="resumeCard">
+        <div class="ic-head">
+          <div class="ic-dot"></div>
+          <span class="ic-title">Your Resume</span>
+          <div class="tab-pair">
+            <button class="tp-btn on" onclick="switchTab('resume','paste',this)">Paste</button>
+            <button class="tp-btn" onclick="switchTab('resume','upload',this)">Upload</button>
+          </div>
+        </div>
+        <div id="resume-paste">
+          <textarea class="ta" id="resumeText" placeholder="Paste your full resume here...
+
+Include:
+• Contact information
+• Education section
+• Work experience
+• Projects with tech stack
+• Skills section"></textarea>
+        </div>
+        <div id="resume-upload" style="display:none;">
+          <input type="file" id="resumeFile" accept=".txt,.pdf" onchange="handleFile('resume',this)">
+          <div class="upload-zone" id="resumeDrop"
+            onclick="document.getElementById('resumeFile').click()"
+            ondragover="onDrag(event,true,'resumeDrop')"
+            ondragleave="onDrag(event,false,'resumeDrop')"
+            ondrop="onDrop(event,'resume')">
+            <div class="uz-icon">📄</div>
+            <div class="uz-text">Drop file or <strong>browse</strong></div>
+            <div class="uz-hint">.txt or .pdf supported</div>
+            <div class="uz-fname" id="resumeFName"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- JD -->
+      <div class="input-card" id="jdCard">
+        <div class="ic-head">
+          <div class="ic-dot"></div>
+          <span class="ic-title">Job Description</span>
+          <div class="tab-pair">
+            <button class="tp-btn on" onclick="switchTab('jd','paste',this)">Paste</button>
+            <button class="tp-btn" onclick="switchTab('jd','upload',this)">Upload</button>
+          </div>
+        </div>
+        <div id="jd-paste">
+          <textarea class="ta" id="jdText" placeholder="Paste the full job posting here...
+
+Include everything:
+• Required skills & experience
+• Responsibilities
+• Nice to have skills
+• Qualifications"></textarea>
+        </div>
+        <div id="jd-upload" style="display:none;">
+          <input type="file" id="jdFile" accept=".txt" onchange="handleFile('jd',this)">
+          <div class="upload-zone" id="jdDrop"
+            onclick="document.getElementById('jdFile').click()"
+            ondragover="onDrag(event,true,'jdDrop')"
+            ondragleave="onDrag(event,false,'jdDrop')"
+            ondrop="onDrop(event,'jd')">
+            <div class="uz-icon">📋</div>
+            <div class="uz-text">Drop file or <strong>browse</strong></div>
+            <div class="uz-hint">.txt files</div>
+            <div class="uz-fname" id="jdFName"></div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="complexity-grid" id="complexityGrid">
-      <div class="cx-box"><div class="cx-label">Best Case</div><div class="cx-val good" id="cxBest">O(n)</div></div>
-      <div class="cx-box"><div class="cx-label">Average</div><div class="cx-val bad" id="cxAvg">O(n²)</div></div>
-      <div class="cx-box"><div class="cx-label">Worst Case</div><div class="cx-val bad" id="cxWorst">O(n²)</div></div>
-      <div class="cx-box"><div class="cx-label">Space</div><div class="cx-val good" id="cxSpace">O(1)</div></div>
+
+    <!-- Actions -->
+    <div class="action-bar">
+      <button class="scan-btn" id="scanBtn" onclick="runScan()">
+        <div class="sp"></div>
+        <span class="sl">⚡ Analyze Resume</span>
+      </button>
+      <button class="clear-btn" onclick="clearAll()">↺ Clear</button>
     </div>
   </div>
 
-  <!-- Visualizer (left column) -->
-  <div style="display:flex;flex-direction:column;gap:16px;">
+  <!-- Results -->
+  <div id="results">
 
-    <!-- Algorithm selector + viz card -->
-    <div class="viz-card">
-      <div class="viz-header">
-        <div class="viz-title" id="vizTitle">Sorting Algorithms</div>
-        <div id="algoSelect" style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button class="algo-name active" id="btn-bubble" onclick="selectAlgo('bubble',this)">Bubble</button>
-          <button class="algo-name" id="btn-selection" onclick="selectAlgo('selection',this)">Selection</button>
-          <button class="algo-name" id="btn-insertion" onclick="selectAlgo('insertion',this)">Insertion</button>
-          <button class="algo-name" id="btn-merge" onclick="selectAlgo('merge',this)">Merge</button>
-          <button class="algo-name" id="btn-quick" onclick="selectAlgo('quick',this)">Quick</button>
-          <button class="algo-name" id="btn-heap" onclick="selectAlgo('heap',this)">Heap</button>
+    <!-- Score hero -->
+    <div class="score-hero" id="scoreHero">
+      <div class="score-ring-wrap">
+        <svg width="96" height="96" viewBox="0 0 96 96">
+          <circle class="sr-bg" cx="48" cy="48" r="40"/>
+          <circle class="sr-fill" id="scoreRing" cx="48" cy="48" r="40"
+            stroke-dasharray="251" stroke-dashoffset="251"/>
+        </svg>
+        <div class="score-num-wrap">
+          <div class="score-pct" id="scorePct">0%</div>
+          <div class="score-grade" id="scoreGrade">—</div>
         </div>
       </div>
-      <div class="viz-body">
-        <!-- Section tabs -->
-        <div class="section-tabs">
-          <button class="stab active" onclick="switchView('bars',this)">Bar Chart</button>
-          <button class="stab" onclick="switchView('array',this)">Array View</button>
-        </div>
 
-        <!-- Array state display (always visible) -->
-        <div class="array-state" id="arrayState">
-          <span class="arr-label">array[]</span>
-          <span style="font-size:11px;color:var(--muted2);font-family:var(--mono)">Generate an array to begin</span>
-        </div>
-
-        <!-- Bar chart view -->
-        <div id="barsView">
-          <div class="bars-wrap" id="barsWrap"></div>
-        </div>
-
-        <!-- Array cell view -->
-        <div id="arrayView" style="display:none;">
-          <div style="display:flex;flex-wrap:wrap;gap:6px;min-height:80px;align-items:flex-start;" id="cellsWrap"></div>
-        </div>
-
-        <!-- Legend -->
-        <div class="legend">
-          <div class="leg-item"><div class="leg-dot" style="background:var(--bar-compare)"></div>Comparing</div>
-          <div class="leg-item"><div class="leg-dot" style="background:var(--bar-swap)"></div>Swapping</div>
-          <div class="leg-item"><div class="leg-dot" style="background:var(--bar-sorted)"></div>Sorted</div>
-          <div class="leg-item"><div class="leg-dot" style="background:var(--bar-pivot)"></div>Pivot</div>
-          <div class="leg-item"><div class="leg-dot" style="background:var(--bar-current)"></div>Current</div>
-          <div class="leg-item"><div class="leg-dot" style="background:var(--bar-default)"></div>Default</div>
-        </div>
-
-        <!-- Done banner -->
-        <div class="done-banner" id="doneBanner">✓ Sorting complete! Array is now fully sorted.</div>
-
-        <!-- Controls -->
-        <div class="controls">
-          <button class="ctrl-btn btn-primary" id="startBtn" onclick="startSort()">▶ Start</button>
-          <button class="ctrl-btn btn-secondary" id="stepBtn" onclick="stepOnce()">→ Step</button>
-          <button class="ctrl-btn btn-secondary" id="pauseBtn" onclick="togglePause()" disabled>⏸ Pause</button>
-          <button class="ctrl-btn btn-danger" onclick="resetAll()">↺ Reset</button>
-          <button class="ctrl-btn btn-success" onclick="generateArray()">⟳ New Array</button>
-          <div class="speed-wrap">
-            <span class="speed-label">Speed</span>
-            <input type="range" id="speedSlider" min="1" max="10" value="5">
-            <span class="speed-label" id="speedVal">5</span>
-          </div>
-          <div class="size-wrap">
-            <span class="size-label">Size</span>
-            <input type="range" id="sizeSlider" min="5" max="30" value="15" onchange="onSizeChange()">
-            <span class="size-val" id="sizeVal">15</span>
+      <div class="score-info">
+        <h2 id="scoreTitle">Analyzing...</h2>
+        <div class="score-msg" id="scoreMsg"></div>
+        <div class="score-pills" id="scorePills"></div>
+        <div class="prog-wrap">
+          <div class="prog-track">
+            <div class="prog-fill" id="progFill" style="width:0%"></div>
           </div>
         </div>
+      </div>
 
-        <!-- Custom input -->
-        <div class="custom-input-wrap">
-          <input class="custom-input" id="customInput" placeholder="Custom array: 5, 3, 8, 1, 9, 2 (comma separated)" />
-          <button class="ctrl-btn btn-secondary" onclick="loadCustom()">Load</button>
+      <div class="quick-stats">
+        <div class="qs-box">
+          <div class="qs-num" id="qsTotal" style="color:var(--muted3)">—</div>
+          <div class="qs-lbl">JD Keywords</div>
+        </div>
+        <div class="qs-box">
+          <div class="qs-num" id="qsMatched" style="color:var(--green)">—</div>
+          <div class="qs-lbl">Matched</div>
+        </div>
+        <div class="qs-box">
+          <div class="qs-num" id="qsMissing" style="color:var(--red)">—</div>
+          <div class="qs-lbl">Missing</div>
         </div>
       </div>
     </div>
 
-    <!-- Key concepts -->
-    <div id="conceptsSection">
-      <div class="concepts-grid" id="conceptsGrid"></div>
-    </div>
+    <!-- Matched + Missing -->
+    <div class="results-grid">
 
+      <div class="panel">
+        <div class="panel-head">
+          <span class="ph-icon">✓</span>
+          <span class="ph-title" style="color:var(--green)">Matched Keywords</span>
+          <span class="ph-count" id="matchedCount">0</span>
+        </div>
+        <div class="panel-body" id="matchedBody"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <span class="ph-icon">✗</span>
+          <span class="ph-title" style="color:var(--red)">Missing Keywords</span>
+          <span class="ph-count" id="missingCount">0</span>
+        </div>
+        <div class="panel-body" id="missingBody"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <span class="ph-icon">+</span>
+          <span class="ph-title" style="color:var(--blue)">Bonus Skills</span>
+          <span class="ph-count" id="bonusCount">0</span>
+        </div>
+        <div class="panel-body" id="bonusBody"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <span class="ph-icon">📋</span>
+          <span class="ph-title">Resume Sections</span>
+        </div>
+        <div class="panel-body" id="sectionsBody"></div>
+      </div>
+
+      <!-- Key phrases full width -->
+      <div class="panel full">
+        <div class="panel-head">
+          <span class="ph-icon">◈</span>
+          <span class="ph-title" style="color:var(--yellow)">Key Phrases From JD Not In Resume</span>
+          <span class="ph-count" id="phrasesCount">0</span>
+        </div>
+        <div class="panel-body" id="phrasesBody"></div>
+      </div>
+
+      <!-- Recommendations full width -->
+      <div class="panel full">
+        <div class="panel-head">
+          <span class="ph-icon">💡</span>
+          <span class="ph-title" style="color:var(--purple)">Recommendations</span>
+        </div>
+        <div class="panel-body" id="recsBody"></div>
+      </div>
+
+    </div>
   </div>
 
-  <!-- Right column -->
-  <div style="display:flex;flex-direction:column;gap:16px;">
-
-    <!-- Step explanation -->
-    <div class="step-card">
-      <div class="step-header">
-        <div class="step-title">What's Happening</div>
-        <div class="step-counter" id="stepCounter">Step 0</div>
-      </div>
-      <div class="step-body">
-        <div class="step-action" id="stepAction" style="color:var(--muted)">Press Start or Step to begin</div>
-        <div class="step-detail" id="stepDetail" style="color:var(--muted2)">
-          Select an algorithm, generate an array, then watch each step explained in plain English.
-        </div>
-        <div class="step-vars" id="stepVars"></div>
-        <div class="stats-row">
-          <div class="stat-box">
-            <div class="stat-num" id="statComparisons">0</div>
-            <div class="stat-lbl">Comparisons</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-num" id="statSwaps">0</div>
-            <div class="stat-lbl">Swaps</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-num" id="statSteps">0</div>
-            <div class="stat-lbl">Steps</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Pseudocode -->
-    <div class="pseudo-card">
-      <div class="pseudo-header">
-        <div class="pseudo-title">Pseudocode</div>
-        <span id="pseudoAlgoName" style="font-size:11px;color:var(--blue);font-family:var(--mono);background:var(--blue-dim);padding:2px 8px;border-radius:20px;">Bubble Sort</span>
-      </div>
-      <div class="pseudo-body" id="pseudoBody"></div>
-    </div>
-
+  <!-- Empty state -->
+  <div class="empty-state" id="emptyState">
+    <div class="es-icon">🎯</div>
+    <div class="es-title">Ready to analyze</div>
+    <div class="es-sub">Paste your resume and a job description above, then click Analyze Resume to get your ATS match score.</div>
   </div>
 
+</div>
+
+<!-- Brand pill -->
+<div class="brand">
+  <span>⚡</span>
+  <a href="https://iamvk07.github.io/portfolio" target="_blank">Vedant Kadam</a>
+  <span class="brand-sep">·</span>
+  <a href="https://github.com/iamvk07/ats-scanner" target="_blank" style="color:var(--muted3);">GitHub</a>
 </div>
 
 <footer>
-  Algorithm Visualizer · Built by <a href="https://github.com/iamvk07" target="_blank">Vedant Kadam</a> ·
-  <a href="https://iamvk07.github.io/portfolio" target="_blank">Portfolio</a> ·
-  <a href="https://github.com/iamvk07/algorithm-visualizer" target="_blank">GitHub</a>
+  ATS Scanner v2.0 &nbsp;·&nbsp; Built by <a href="https://github.com/iamvk07" target="_blank">Vedant Kadam</a> &nbsp;·&nbsp;
+  <a href="https://iamvk07.github.io/portfolio" target="_blank">Portfolio</a> &nbsp;·&nbsp;
+  Zero dependencies · Pure JavaScript · No data stored
 </footer>
 
 <script>
-// ── STATE ──────────────────────────────────────────────────────────────────
-let arr = [];
-let steps = [];
-let stepIdx = 0;
-let running = false;
-let paused = false;
-let timer = null;
-let comparisons = 0, swaps = 0;
-let currentAlgo = 'bubble';
-let currentCategory = 'sorting';
-let currentView = 'bars';
-let arrSize = 15;
-
-// ── ALGO DATA ──────────────────────────────────────────────────────────────
-const ALGO_INFO = {
-  bubble: {
-    title: 'Bubble Sort',
-    desc: 'Repeatedly steps through the array, compares adjacent elements, and swaps them if out of order. The largest unsorted element "bubbles up" to its correct position each pass.',
-    best:'O(n)', avg:'O(n²)', worst:'O(n²)', space:'O(1)',
-    bestClass:'good', avgClass:'bad', worstClass:'bad', spaceClass:'good',
-    concepts: [
-      { icon:'🔄', title:'Adjacent Comparisons', body:'Compare arr[j] and arr[j+1]. If arr[j] > arr[j+1], swap them. Repeat for every pair.' },
-      { icon:'📈', title:'Bubbling Up', body:'After each full pass, the largest unsorted element is guaranteed to be in its final position.' },
-      { icon:'✅', title:'Sorted Suffix', body:'After pass i, the last i elements are sorted. We can shrink the comparison range each pass.' },
-      { icon:'⚡', title:'Early Exit', body:'If no swaps occur in a full pass, the array is already sorted — we can stop early (best case O(n)).' }
-    ],
-    pseudo: [
-      { id:0, code:'<span class="kw">procedure</span> <span class="fn">bubbleSort</span>(arr)', indent:0 },
-      { id:1, code:'&nbsp;&nbsp;<span class="kw">for</span> i = 0 <span class="kw">to</span> n-2', indent:1 },
-      { id:2, code:'&nbsp;&nbsp;&nbsp;&nbsp;swapped = <span class="num">false</span>', indent:2 },
-      { id:3, code:'&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">for</span> j = 0 <span class="kw">to</span> n-i-2', indent:2 },
-      { id:4, code:'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> arr[j] <span class="op">&gt;</span> arr[j+1]', indent:3 },
-      { id:5, code:'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;swap(arr[j], arr[j+1])', indent:4 },
-      { id:6, code:'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;swapped = <span class="num">true</span>', indent:4 },
-      { id:7, code:'&nbsp;&nbsp;<span class="kw">if</span> <span class="op">not</span> swapped: <span class="kw">break</span> <span class="cm">// early exit</span>', indent:1 },
-      { id:8, code:'<span class="cm">// Array is sorted</span>', indent:0 },
-    ]
+// ── KEYWORD TAXONOMY ──────────────────────────────────────────────────────
+const TAXONOMY = {
+  languages: {
+    weight:10, icon:'💻', label:'Languages',
+    kws:['python','java','javascript','typescript','c++','c#','golang','go','rust',
+         'kotlin','swift','ruby','php','scala','r','matlab','bash','shell','sql',
+         'html','css','sass','less','dart','perl']
   },
-  selection: {
-    title: 'Selection Sort',
-    desc: 'Finds the minimum element in the unsorted portion and places it at the beginning. Divides the array into a sorted left part and an unsorted right part.',
-    best:'O(n²)', avg:'O(n²)', worst:'O(n²)', space:'O(1)',
-    bestClass:'bad', avgClass:'bad', worstClass:'bad', spaceClass:'good',
-    concepts: [
-      { icon:'🎯', title:'Find Minimum', body:'Scan the unsorted portion to find the index of the smallest element.' },
-      { icon:'🔁', title:'Place in Position', body:'Swap the minimum found with the first element of the unsorted section.' },
-      { icon:'📦', title:'Grow Sorted Part', body:'After each pass, the sorted prefix grows by one. After n-1 passes, array is sorted.' },
-      { icon:'⚖️', title:'Always O(n²)', body:'Unlike bubble sort, selection sort always does n²/2 comparisons — no early exit possible.' }
-    ],
-    pseudo: [
-      { id:0, code:'<span class="kw">procedure</span> <span class="fn">selectionSort</span>(arr)', indent:0 },
-      { id:1, code:'&nbsp;&nbsp;<span class="kw">for</span> i = 0 <span class="kw">to</span> n-2', indent:1 },
-      { id:2, code:'&nbsp;&nbsp;&nbsp;&nbsp;minIdx = i', indent:2 },
-      { id:3, code:'&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">for</span> j = i+1 <span class="kw">to</span> n-1', indent:2 },
-      { id:4, code:'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> arr[j] <span class="op">&lt;</span> arr[minIdx]', indent:3 },
-      { id:5, code:'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;minIdx = j', indent:4 },
-      { id:6, code:'&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> minIdx <span class="op">≠</span> i', indent:2 },
-      { id:7, code:'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;swap(arr[i], arr[minIdx])', indent:3 },
-      { id:8, code:'<span class="cm">// Array is sorted</span>', indent:0 },
-    ]
+  frameworks: {
+    weight:9, icon:'⚙️', label:'Frameworks & Libraries',
+    kws:['react','angular','vue','next.js','nextjs','nuxt','svelte','node.js','nodejs',
+         'express','fastapi','flask','django','spring','spring boot','rails','laravel',
+         'tensorflow','pytorch','keras','pandas','numpy','scikit-learn','junit','pytest',
+         'jest','mocha','cypress','selenium','graphql','rest','grpc','tailwind','bootstrap',
+         'jquery','material-ui','redux','hibernate','.net','dotnet','asp.net']
   },
-  insertion: {
-    title: 'Insertion Sort',
-    desc: 'Builds the sorted array one element at a time by inserting each new element into its correct position among the already-sorted elements.',
-    best:'O(n)', avg:'O(n²)', worst:'O(n²)', space:'O(1)',
-    bestClass:'good', avgClass:'bad', worstClass:'bad', spaceClass:'good',
-    concepts: [
-      { icon:'🃏', title:'Like Sorting Cards', body:'Imagine sorting playing cards in your hand — pick each card and slide it left until it\'s in the right spot.' },
-      { icon:'↙️', title:'Shift Right', body:'To insert element at key, shift all elements greater than key one position right to make room.' },
-      { icon:'🏆', title:'Best for Small N', body:'Excellent for small arrays or nearly sorted arrays. Online algorithm — can sort a stream as it comes in.' },
-      { icon:'⚡', title:'Adaptive', body:'If array is already sorted, only n-1 comparisons are made (O(n) best case).' }
-    ],
-    pseudo: [
-      { id:0, code:'<span class="kw">procedure</span> <span class="fn">insertionSort</span>(arr)', indent:0 },
-      { id:1, code:'&nbsp;&nbsp;<span class="kw">for</span> i = 1 <span class="kw">to</span> n-1', indent:1 },
-      { id:2, code:'&nbsp;&nbsp;&nbsp;&nbsp;key = arr[i]', indent:2 },
-      { id:3, code:'&nbsp;&nbsp;&nbsp;&nbsp;j = i - 1', indent:2 },
-      { id:4, code:'&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">while</span> j <span class="op">≥</span> 0 <span class="kw">and</span> arr[j] <span class="op">&gt;</span> key', indent:2 },
-      { id:5, code:'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;arr[j+1] = arr[j] <span class="cm">// shift right</span>', indent:3 },
-      { id:6, code:'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;j = j - 1', indent:3 },
-      { id:7, code:'&nbsp;&nbsp;&nbsp;&nbsp;arr[j+1] = key <span class="cm">// insert</span>', indent:2 },
-      { id:8, code:'<span class="cm">// Array is sorted</span>', indent:0 },
-    ]
+  databases: {
+    weight:8, icon:'🗄️', label:'Databases',
+    kws:['postgresql','postgres','mysql','sqlite','mongodb','redis','elasticsearch',
+         'cassandra','dynamodb','oracle','sql server','mssql','mariadb','firebase',
+         'supabase','nosql','sql','influxdb','neo4j']
   },
-  merge: {
-    title: 'Merge Sort',
-    desc: 'Divide and conquer: recursively splits the array in half, sorts each half, then merges the sorted halves back together. Guaranteed O(n log n) performance.',
-    best:'O(n log n)', avg:'O(n log n)', worst:'O(n log n)', space:'O(n)',
-    bestClass:'good', avgClass:'good', worstClass:'good', spaceClass:'ok',
-    concepts: [
-      { icon:'✂️', title:'Divide', body:'Keep splitting the array in half until each sub-array has only 1 element (trivially sorted).' },
-      { icon:'🔗', title:'Conquer & Merge', body:'Merge two sorted halves by comparing front elements, always picking the smaller one.' },
-      { icon:'🌳', title:'Recursion Tree', body:'The recursion tree has log n levels. Each level does O(n) work. Total: O(n log n).' },
-      { icon:'📦', title:'Extra Space', body:'Needs O(n) auxiliary space to hold the merged result, unlike in-place sorts.' }
-    ],
-    pseudo: [
-      { id:0, code:'<span class="kw">procedure</span> <span class="fn">mergeSort</span>(arr, lo, hi)', indent:0 },
-      { id:1, code:'&nbsp;&nbsp;<span class="kw">if</span> lo <span class="op">&gt;=</span> hi: <span class="kw">return</span>', indent:1 },
-      { id:2, code:'&nbsp;&nbsp;mid = (lo + hi) / 2', indent:1 },
-      { id:3, code:'&nbsp;&nbsp;<span class="fn">mergeSort</span>(arr, lo, mid)', indent:1 },
-      { id:4, code:'&nbsp;&nbsp;<span class="fn">mergeSort</span>(arr, mid+1, hi)', indent:1 },
-      { id:5, code:'&nbsp;&nbsp;<span class="fn">merge</span>(arr, lo, mid, hi)', indent:1 },
-      { id:6, code:'<span class="kw">procedure</span> <span class="fn">merge</span>(arr, lo, mid, hi)', indent:0 },
-      { id:7, code:'&nbsp;&nbsp;L = arr[lo..mid], R = arr[mid+1..hi]', indent:1 },
-      { id:8, code:'&nbsp;&nbsp;<span class="kw">while</span> L and R not empty:', indent:1 },
-      { id:9, code:'&nbsp;&nbsp;&nbsp;&nbsp;pick smaller of L[0], R[0]', indent:2 },
-    ]
+  devops: {
+    weight:8, icon:'☁️', label:'DevOps & Cloud',
+    kws:['docker','kubernetes','k8s','aws','azure','gcp','google cloud','terraform',
+         'ansible','jenkins','github actions','gitlab ci','circleci','travis','ci/cd',
+         'devops','linux','unix','nginx','apache','microservices','serverless',
+         'lambda','s3','ec2','rds','cloudformation','helm']
   },
-  quick: {
-    title: 'Quick Sort',
-    desc: 'Selects a pivot element and partitions the array into elements less than and greater than the pivot. Recursively sorts each partition. Average case O(n log n).',
-    best:'O(n log n)', avg:'O(n log n)', worst:'O(n²)', space:'O(log n)',
-    bestClass:'good', avgClass:'good', worstClass:'bad', spaceClass:'good',
-    concepts: [
-      { icon:'📍', title:'Pivot Selection', body:'Choose a pivot (often last element). Partition array so smaller elements come before pivot, larger after.' },
-      { icon:'🔀', title:'In-Place Partition', body:'Use two pointers i and j. Move j forward; swap to left partition when arr[j] ≤ pivot.' },
-      { icon:'⚡', title:'Usually Fastest', body:'Best practical sorting algorithm in most real-world cases. Cache-friendly, in-place, low overhead.' },
-      { icon:'⚠️', title:'Worst Case Pitfall', body:'Already-sorted arrays with naive pivot selection degrade to O(n²). Randomized pivot fixes this.' }
-    ],
-    pseudo: [
-      { id:0, code:'<span class="kw">procedure</span> <span class="fn">quickSort</span>(arr, lo, hi)', indent:0 },
-      { id:1, code:'&nbsp;&nbsp;<span class="kw">if</span> lo <span class="op">&lt;</span> hi:', indent:1 },
-      { id:2, code:'&nbsp;&nbsp;&nbsp;&nbsp;p = <span class="fn">partition</span>(arr, lo, hi)', indent:2 },
-      { id:3, code:'&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">quickSort</span>(arr, lo, p-1)', indent:2 },
-      { id:4, code:'&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">quickSort</span>(arr, p+1, hi)', indent:2 },
-      { id:5, code:'<span class="kw">procedure</span> <span class="fn">partition</span>(arr, lo, hi)', indent:0 },
-      { id:6, code:'&nbsp;&nbsp;pivot = arr[hi]', indent:1 },
-      { id:7, code:'&nbsp;&nbsp;i = lo - 1', indent:1 },
-      { id:8, code:'&nbsp;&nbsp;<span class="kw">for</span> j = lo <span class="kw">to</span> hi-1:', indent:1 },
-      { id:9, code:'&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> arr[j] <span class="op">≤</span> pivot: swap(arr[++i], arr[j])', indent:2 },
-    ]
+  tools: {
+    weight:7, icon:'🔧', label:'Tools & Platforms',
+    kws:['git','github','gitlab','bitbucket','jira','confluence','slack','figma',
+         'postman','swagger','maven','gradle','npm','yarn','webpack','vite','vs code',
+         'intellij','android studio','xcode','vim']
   },
-  heap: {
-    title: 'Heap Sort',
-    desc: 'Builds a max-heap from the array, then repeatedly extracts the maximum element to build the sorted array. Guaranteed O(n log n) and in-place.',
-    best:'O(n log n)', avg:'O(n log n)', worst:'O(n log n)', space:'O(1)',
-    bestClass:'good', avgClass:'good', worstClass:'good', spaceClass:'good',
-    concepts: [
-      { icon:'🏔️', title:'Max Heap Property', body:'Parent is always ≥ its children. Root is always the maximum element.' },
-      { icon:'🔨', title:'Build Heap (Heapify)', body:'Start from the last internal node, sift down to build heap in O(n) time.' },
-      { icon:'📤', title:'Extract Max', body:'Swap root (max) with last element, shrink heap size, then heapify root down.' },
-      { icon:'✨', title:'Best of Both', body:'Guaranteed O(n log n) unlike quicksort, and O(1) space unlike merge sort.' }
-    ],
-    pseudo: [
-      { id:0, code:'<span class="kw">procedure</span> <span class="fn">heapSort</span>(arr)', indent:0 },
-      { id:1, code:'&nbsp;&nbsp;<span class="cm">// Build max heap</span>', indent:1 },
-      { id:2, code:'&nbsp;&nbsp;<span class="kw">for</span> i = n/2-1 <span class="kw">down to</span> 0:', indent:1 },
-      { id:3, code:'&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">heapify</span>(arr, n, i)', indent:2 },
-      { id:4, code:'&nbsp;&nbsp;<span class="cm">// Extract elements one by one</span>', indent:1 },
-      { id:5, code:'&nbsp;&nbsp;<span class="kw">for</span> i = n-1 <span class="kw">down to</span> 1:', indent:1 },
-      { id:6, code:'&nbsp;&nbsp;&nbsp;&nbsp;swap(arr[0], arr[i]) <span class="cm">// move max to end</span>', indent:2 },
-      { id:7, code:'&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">heapify</span>(arr, i, 0)', indent:2 },
-      { id:8, code:'<span class="kw">procedure</span> <span class="fn">heapify</span>(arr, n, i)', indent:0 },
-      { id:9, code:'&nbsp;&nbsp;largest = i; l=2i+1; r=2i+2', indent:1 },
-    ]
+  concepts: {
+    weight:7, icon:'🧠', label:'Concepts & Practices',
+    kws:['agile','scrum','kanban','tdd','bdd','oop','object oriented','functional programming',
+         'data structures','algorithms','design patterns','solid','mvc','rest api','restful',
+         'websocket','authentication','oauth','jwt','machine learning','deep learning',
+         'nlp','computer vision','unit testing','integration testing','code review',
+         'ci/cd','version control','debugging','security','encryption','microservices','api']
   },
-};
-
-const GRAPH_ALGOS = {
-  bfs: {
-    title:'Breadth-First Search (BFS)',
-    desc:'Explores all neighbours of a node before going deeper. Uses a queue. Finds shortest path in unweighted graphs. Visits nodes level by level.',
-    best:'O(V+E)', avg:'O(V+E)', worst:'O(V+E)', space:'O(V)',
-    bestClass:'good', avgClass:'good', worstClass:'good', spaceClass:'ok',
-    pseudo:[
-      { id:0, code:'<span class="kw">procedure</span> <span class="fn">BFS</span>(graph, start)' },
-      { id:1, code:'&nbsp;&nbsp;queue = [start]; visited = {start}' },
-      { id:2, code:'&nbsp;&nbsp;<span class="kw">while</span> queue not empty:' },
-      { id:3, code:'&nbsp;&nbsp;&nbsp;&nbsp;node = queue.<span class="fn">dequeue</span>()' },
-      { id:4, code:'&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">process</span>(node)' },
-      { id:5, code:'&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">for</span> neighbour <span class="kw">in</span> graph[node]:' },
-      { id:6, code:'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> neighbour <span class="op">not in</span> visited:' },
-      { id:7, code:'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;visited.<span class="fn">add</span>(neighbour)' },
-      { id:8, code:'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;queue.<span class="fn">enqueue</span>(neighbour)' },
-    ],
-    concepts:[
-      { icon:'📋', title:'Queue (FIFO)', body:'BFS uses a queue. First-in, first-out ensures we visit nodes level by level.' },
-      { icon:'🎯', title:'Shortest Path', body:'In unweighted graphs, BFS always finds the shortest path (fewest edges) from source.' },
-      { icon:'🌊', title:'Level Order', body:'All nodes at distance 1 visited before distance 2, etc. Like ripples in water.' },
-      { icon:'📊', title:'O(V+E) Time', body:'Every vertex V and edge E is processed exactly once. V = vertices, E = edges.' }
-    ]
+  soft: {
+    weight:4, icon:'🤝', label:'Soft Skills',
+    kws:['communication','teamwork','collaboration','leadership','problem solving',
+         'analytical','fast learner','self motivated','adaptable','creative',
+         'critical thinking','time management','initiative','proactive','attention to detail']
   },
-  dfs: {
-    title:'Depth-First Search (DFS)',
-    desc:'Explores as far as possible down each branch before backtracking. Uses a stack (or recursion). Good for cycle detection, topological sort, maze solving.',
-    best:'O(V+E)', avg:'O(V+E)', worst:'O(V+E)', space:'O(V)',
-    bestClass:'good', avgClass:'good', worstClass:'good', spaceClass:'ok',
-    pseudo:[
-      { id:0, code:'<span class="kw">procedure</span> <span class="fn">DFS</span>(graph, node, visited)' },
-      { id:1, code:'&nbsp;&nbsp;visited.<span class="fn">add</span>(node)' },
-      { id:2, code:'&nbsp;&nbsp;<span class="fn">process</span>(node)' },
-      { id:3, code:'&nbsp;&nbsp;<span class="kw">for</span> neighbour <span class="kw">in</span> graph[node]:' },
-      { id:4, code:'&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> neighbour <span class="op">not in</span> visited:' },
-      { id:5, code:'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">DFS</span>(graph, neighbour, visited)' },
-      { id:6, code:'<span class="cm">// Backtracks when no unvisited neighbours</span>' },
-    ],
-    concepts:[
-      { icon:'📚', title:'Stack (LIFO)', body:'DFS uses a stack (or recursion). Last-in, first-out means we go deep before wide.' },
-      { icon:'🔙', title:'Backtracking', body:'When a dead end is reached, DFS backtracks to the last branching point and tries another path.' },
-      { icon:'🔄', title:'Cycle Detection', body:'If we visit an already-visited node, we\'ve found a cycle. Essential for detecting loops in graphs.' },
-      { icon:'🗺️', title:'Topological Sort', body:'Process nodes in order of completion time. Used in task scheduling and dependency resolution.' }
-    ]
-  },
-  dijkstra: {
-    title:"Dijkstra's Shortest Path",
-    desc:'Finds the shortest path from a source node to all other nodes in a weighted graph with non-negative weights. Uses a priority queue (min-heap).',
-    best:'O(E log V)', avg:'O(E log V)', worst:'O(E log V)', space:'O(V)',
-    bestClass:'good', avgClass:'good', worstClass:'ok', spaceClass:'ok',
-    pseudo:[
-      { id:0, code:'<span class="kw">procedure</span> <span class="fn">dijkstra</span>(graph, src)' },
-      { id:1, code:'&nbsp;&nbsp;dist[src]=0; dist[others]=∞' },
-      { id:2, code:'&nbsp;&nbsp;pq = MinHeap(); pq.<span class="fn">push</span>(src, 0)' },
-      { id:3, code:'&nbsp;&nbsp;<span class="kw">while</span> pq not empty:' },
-      { id:4, code:'&nbsp;&nbsp;&nbsp;&nbsp;u = pq.<span class="fn">popMin</span>()' },
-      { id:5, code:'&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">for</span> (v, w) <span class="kw">in</span> graph[u]:' },
-      { id:6, code:'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> dist[u]+w <span class="op">&lt;</span> dist[v]:' },
-      { id:7, code:'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dist[v] = dist[u] + w' },
-      { id:8, code:'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pq.<span class="fn">push</span>(v, dist[v])' },
-    ],
-    concepts:[
-      { icon:'🏷️', title:'Greedy Choice', body:'Always process the unvisited node with the smallest known distance. This greedy choice is provably optimal.' },
-      { icon:'📉', title:'Relaxation', body:'If a shorter path to neighbour v is found via u, update dist[v]. This is called "edge relaxation".' },
-      { icon:'⛔', title:'No Negative Weights', body:'Dijkstra fails with negative edge weights. Use Bellman-Ford instead for negative weights.' },
-      { icon:'🗂️', title:'Priority Queue', body:'Min-heap ensures we always process the minimum distance node next in O(log V) time.' }
-    ]
+  education: {
+    weight:5, icon:'🎓', label:'Education',
+    kws:['bachelor','master','phd','computer science','software engineering',
+         'information technology','mathematics','statistics','degree','diploma','certification']
   }
 };
 
-// ── STEP GENERATORS ────────────────────────────────────────────────────────
-function generateBubbleSteps(a) {
-  const s = [], n = a.length;
-  const sorted = new Set();
-  for(let i=0;i<n-1;i++){
-    let swapped=false;
-    for(let j=0;j<n-i-1;j++){
-      s.push({ type:'compare', i:j, j:j+1, sorted:[...sorted],
-        pseudo:4,
-        action:`Comparing arr[${j}] = ${a[j]} and arr[${j+1}] = ${a[j+1]}`,
-        detail:`Is ${a[j]} > ${a[j+1]}? ${a[j]>a[j+1]?'Yes — need to swap!':'No — already in order.'}`,
-        vars:[{k:'i',v:i},{k:'j',v:j},{k:'arr[j]',v:a[j]},{k:'arr[j+1]',v:a[j+1]}],
-        arr:[...a] });
-      if(a[j]>a[j+1]){
-        [a[j],a[j+1]]=[a[j+1],a[j]]; swapped=true;
-        s.push({ type:'swap', i:j, j:j+1, sorted:[...sorted],
-          pseudo:5,
-          action:`Swapping ${a[j+1]} and ${a[j]}`,
-          detail:`${a[j+1]} was greater than ${a[j]}, so we swap them to move the larger value right.`,
-          vars:[{k:'i',v:i},{k:'j',v:j},{k:'arr[j]',v:a[j]},{k:'arr[j+1]',v:a[j+1]}],
-          arr:[...a] });
-      }
+const STOP = new Set(['the','a','an','and','or','but','in','on','at','to','for','of',
+  'with','by','from','is','are','was','were','be','been','have','has','had','do','does',
+  'did','will','would','could','should','may','might','can','about','this','that','these',
+  'those','we','you','they','all','any','some','not','more','most','other','into','each',
+  'so','than','too','very','just','also','both','only','then','when','where','who',
+  'experience','work','years','year','new','using','use','used','including','skills','strong',
+  'good','knowledge','understanding','role','team','ability','help','must','need','required']);
+
+const SECTION_ICONS = {contact:'📧',education:'🎓',experience:'💼',projects:'🚀',skills:'⚡',summary:'📝'};
+
+// ── TEXT PROCESSING ───────────────────────────────────────────────────────
+function clean(text){ return text.toLowerCase().replace(/[^\w\s+#./]/g,' ').replace(/\s+/g,' ').trim(); }
+
+function extractKws(text){
+  const low = text.toLowerCase(), found = {};
+  for(const [cat, data] of Object.entries(TAXONOMY)){
+    const matches = [];
+    for(const kw of data.kws){
+      if(new RegExp('\\b'+kw.replace(/[+.]/g,'\\$&').replace(/\//g,'\\/')+'\\b','i').test(low))
+        matches.push(kw);
     }
-    sorted.add(n-1-i);
-    s.push({ type:'pass-done', sorted:[...sorted], pseudo:7,
-      action:`Pass ${i+1} complete`,
-      detail:`The largest unsorted value (${a[n-1-i]}) has bubbled to position ${n-1-i}. ${!swapped?'No swaps this pass — array is sorted early!':''}`,
-      vars:[{k:'pass',v:i+1},{k:'sorted_from',v:n-1-i}],
-      arr:[...a] });
-    if(!swapped) break;
+    if(matches.length) found[cat] = matches;
   }
-  // Mark all sorted
-  const allSorted = Array.from({length:n},(_,i)=>i);
-  s.push({ type:'done', sorted:allSorted, pseudo:8,
-    action:'✓ Array fully sorted!',
-    detail:'Every element is now in its correct position. Bubble sort complete.',
-    vars:[], arr:[...a] });
-  return s;
+  return found;
 }
 
-function generateSelectionSteps(a) {
-  const s = [], n = a.length;
-  const sorted = new Set();
-  for(let i=0;i<n-1;i++){
-    let minIdx=i;
-    s.push({ type:'start-pass', i, sorted:[...sorted], pseudo:2,
-      action:`Finding minimum in positions ${i} to ${n-1}`,
-      detail:`We'll scan the unsorted portion (index ${i} to ${n-1}) to find the minimum value.`,
-      vars:[{k:'i',v:i},{k:'minIdx',v:minIdx}], arr:[...a] });
-    for(let j=i+1;j<n;j++){
-      s.push({ type:'compare', i:minIdx, j, sorted:[...sorted], pseudo:4,
-        action:`Comparing arr[${j}] = ${a[j]} with current min arr[${minIdx}] = ${a[minIdx]}`,
-        detail:`Is ${a[j]} < ${a[minIdx]}? ${a[j]<a[minIdx]?'Yes — new minimum found!':'No — keep current minimum.'}`,
-        vars:[{k:'i',v:i},{k:'j',v:j},{k:'minIdx',v:minIdx},{k:'min val',v:a[minIdx]}], arr:[...a] });
-      if(a[j]<a[minIdx]){
-        minIdx=j;
-        s.push({ type:'new-min', minIdx, sorted:[...sorted], pseudo:5,
-          action:`New minimum found: ${a[minIdx]} at index ${minIdx}`,
-          detail:`${a[minIdx]} is smaller than the previous minimum. Update minIdx = ${minIdx}.`,
-          vars:[{k:'minIdx',v:minIdx},{k:'min val',v:a[minIdx]}], arr:[...a] });
-      }
-    }
-    if(minIdx!==i){
-      [a[i],a[minIdx]]=[a[minIdx],a[i]];
-      s.push({ type:'swap', i, j:minIdx, sorted:[...sorted], pseudo:7,
-        action:`Placing minimum ${a[i]} at position ${i}`,
-        detail:`Swap arr[${i}] and arr[${minIdx}]. The minimum of the unsorted portion is now at its correct position.`,
-        vars:[{k:'i',v:i},{k:'minIdx',v:minIdx},{k:'placed',v:a[i]}], arr:[...a] });
-    }
-    sorted.add(i);
-  }
-  const allSorted = Array.from({length:n},(_,i)=>i);
-  s.push({ type:'done', sorted:allSorted, pseudo:8,
-    action:'✓ Array fully sorted!',
-    detail:'Every element has been placed in its correct position by selection sort.',
-    vars:[], arr:[...a] });
-  return s;
+function getWords(text){
+  return (text.toLowerCase().match(/\b[a-z][a-z0-9+#.]*\b/g)||[])
+    .filter(w=>!STOP.has(w)&&w.length>2);
 }
 
-function generateInsertionSteps(a) {
-  const s = [], n = a.length;
-  const sorted = new Set([0]);
-  s.push({ type:'init', sorted:[0], pseudo:0,
-    action:'First element arr[0] is trivially sorted',
-    detail:'A single element is always sorted. We start inserting from index 1.',
-    vars:[{k:'sorted',v:'[0]'}], arr:[...a] });
-  for(let i=1;i<n;i++){
-    const key=a[i];
-    s.push({ type:'pick-key', i, sorted:[...sorted], pseudo:2,
-      action:`Picking key = ${key} (arr[${i}])`,
-      detail:`We'll insert ${key} into the correct position in the sorted left portion [0..${i-1}].`,
-      vars:[{k:'i',v:i},{k:'key',v:key}], arr:[...a] });
-    let j=i-1;
-    let shifted=false;
-    while(j>=0 && a[j]>key){
-      s.push({ type:'compare', i:j+1, j, sorted:[...sorted], pseudo:4,
-        action:`arr[${j}] = ${a[j]} > key ${key} — shift right`,
-        detail:`${a[j]} is greater than ${key}, so shift it one position right to make room.`,
-        vars:[{k:'key',v:key},{k:'j',v:j},{k:'arr[j]',v:a[j]}], arr:[...a] });
-      a[j+1]=a[j];
-      shifted=true;
-      s.push({ type:'shift', from:j, to:j+1, sorted:[...sorted], pseudo:5,
-        action:`Shifted ${a[j+1]} from index ${j} to ${j+1}`,
-        detail:`Moving ${a[j+1]} right by one position. Current array state shown above.`,
-        vars:[{k:'key',v:key},{k:'j',v:j}], arr:[...a] });
-      j--;
-    }
-    a[j+1]=key;
-    sorted.add(i);
-    s.push({ type:'insert', pos:j+1, sorted:[...sorted], pseudo:7,
-      action:`Inserted ${key} at position ${j+1}`,
-      detail:`${key} is now in its correct sorted position. Left portion [0..${i}] is fully sorted.`,
-      vars:[{k:'key',v:key},{k:'inserted at',v:j+1}], arr:[...a] });
-  }
-  const allSorted = Array.from({length:n},(_,i)=>i);
-  s.push({ type:'done', sorted:allSorted, pseudo:8,
-    action:'✓ Array fully sorted!',
-    detail:'All elements have been inserted into their correct positions.',
-    vars:[], arr:[...a] });
-  return s;
+function getNgrams(text, n=2){
+  const w = getWords(text), ng = [];
+  for(let i=0;i<w.length-n+1;i++) ng.push(w.slice(i,i+n).join(' '));
+  return ng;
 }
 
-function generateMergeSteps(a) {
-  const s = [];
-  const n = a.length;
-  const sorted = new Set();
+function analyze(resumeText, jdText){
+  const rc = clean(resumeText), jc = clean(jdText);
+  const rKws = extractKws(rc), jKws = extractKws(jc);
+  const rFlat = new Set(Object.values(rKws).flat());
+  const jFlat = new Set(Object.values(jKws).flat());
+  const matched = new Set([...jFlat].filter(k=>rFlat.has(k)));
+  const missing = new Set([...jFlat].filter(k=>!rFlat.has(k)));
 
-  function merge(arr, lo, mid, hi) {
-    const left = arr.slice(lo, mid+1);
-    const right = arr.slice(mid+1, hi+1);
-    s.push({ type:'merge-start', lo, mid, hi, sorted:[...sorted], pseudo:6,
-      action:`Merging subarrays [${lo}..${mid}] and [${mid+1}..${hi}]`,
-      detail:`Left half: [${left.join(', ')}]  |  Right half: [${right.join(', ')}]`,
-      vars:[{k:'lo',v:lo},{k:'mid',v:mid},{k:'hi',v:hi}], arr:[...arr] });
-    let i=0, j=0, k=lo;
-    while(i<left.length && j<right.length){
-      s.push({ type:'compare', i:lo+i, j:mid+1+j, sorted:[...sorted], pseudo:9,
-        action:`Comparing ${left[i]} (left) vs ${right[j]} (right)`,
-        detail:`Pick the smaller: ${left[i]<=right[j]?left[i]+' wins (from left)':right[j]+' wins (from right)'}`,
-        vars:[{k:'left[i]',v:left[i]},{k:'right[j]',v:right[j]}], arr:[...arr] });
-      if(left[i]<=right[j]) arr[k++]=left[i++];
-      else arr[k++]=right[j++];
-      s.push({ type:'merge-place', k:k-1, sorted:[...sorted], pseudo:9,
-        action:`Placed ${arr[k-1]} at position ${k-1}`,
-        detail:`Array state after placing value.`,
-        vars:[{k:'placed',v:arr[k-1]},{k:'at',v:k-1}], arr:[...arr] });
-    }
-    while(i<left.length) { arr[k++]=left[i++]; }
-    while(j<right.length) { arr[k++]=right[j++]; }
-    for(let x=lo;x<=hi;x++) sorted.add(x);
-    s.push({ type:'merge-done', lo, hi, sorted:[...sorted], pseudo:5,
-      action:`Subarray [${lo}..${hi}] sorted: [${arr.slice(lo,hi+1).join(', ')}]`,
-      detail:`This segment is now merged and sorted. It will be used in the next merge up.`,
-      vars:[{k:'lo',v:lo},{k:'hi',v:hi}], arr:[...arr] });
-  }
-
-  function mergeSort(arr, lo, hi) {
-    if(lo>=hi){ sorted.add(lo); return; }
-    const mid = Math.floor((lo+hi)/2);
-    s.push({ type:'divide', lo, mid, hi, sorted:[...sorted], pseudo:2,
-      action:`Dividing [${lo}..${hi}] at midpoint ${mid}`,
-      detail:`Split into [${lo}..${mid}] and [${mid+1}..${hi}]. Recursively sort each half.`,
-      vars:[{k:'lo',v:lo},{k:'mid',v:mid},{k:'hi',v:hi}], arr:[...arr] });
-    mergeSort(arr, lo, mid);
-    mergeSort(arr, mid+1, hi);
-    merge(arr, lo, mid, hi);
-  }
-
-  mergeSort(a, 0, n-1);
-  const allSorted = Array.from({length:n},(_,i)=>i);
-  s.push({ type:'done', sorted:allSorted, pseudo:9,
-    action:'✓ Array fully sorted!',
-    detail:'Merge sort complete. All divisions have been merged back in sorted order.',
-    vars:[], arr:[...a] });
-  return s;
-}
-
-function generateQuickSteps(a) {
-  const s = [];
-  const n = a.length;
-  const sorted = new Set();
-
-  function partition(arr, lo, hi) {
-    const pivot = arr[hi];
-    s.push({ type:'pivot', pivotIdx:hi, lo, hi, sorted:[...sorted], pseudo:6,
-      action:`Pivot = ${pivot} (arr[${hi}])`,
-      detail:`Using last element as pivot. Will partition [${lo}..${hi}] so elements ≤ ${pivot} go left, larger go right.`,
-      vars:[{k:'pivot',v:pivot},{k:'lo',v:lo},{k:'hi',v:hi}], arr:[...arr] });
-    let i = lo - 1;
-    for(let j=lo; j<hi; j++){
-      s.push({ type:'compare', i:j, j:hi, sorted:[...sorted], pseudo:9,
-        action:`Comparing arr[${j}] = ${arr[j]} with pivot ${pivot}`,
-        detail:`Is ${arr[j]} ≤ ${pivot}? ${arr[j]<=pivot?'Yes — move to left partition.':'No — stays in right partition.'}`,
-        vars:[{k:'j',v:j},{k:'i',v:i},{k:'pivot',v:pivot}], arr:[...arr] });
-      if(arr[j]<=pivot){
-        i++;
-        if(i!==j){
-          [arr[i],arr[j]]=[arr[j],arr[i]];
-          s.push({ type:'swap', i, j, sorted:[...sorted], pseudo:9,
-            action:`Swapping arr[${i}]=${arr[i]} and arr[${j}]=${arr[j]}`,
-            detail:`${arr[i]} ≤ pivot, moving it to left partition at index ${i}.`,
-            vars:[{k:'i',v:i},{k:'j',v:j}], arr:[...arr] });
-        }
-      }
-    }
-    [arr[i+1],arr[hi]]=[arr[hi],arr[i+1]];
-    sorted.add(i+1);
-    s.push({ type:'pivot-placed', pivotIdx:i+1, lo, hi, sorted:[...sorted], pseudo:9,
-      action:`Pivot ${pivot} placed at index ${i+1}`,
-      detail:`All elements to the left of index ${i+1} are ≤ ${pivot}. All to the right are > ${pivot}. Pivot is in final position!`,
-      vars:[{k:'pivot at',v:i+1},{k:'pivot',v:pivot}], arr:[...arr] });
-    return i+1;
-  }
-
-  function quickSort(arr, lo, hi) {
-    if(lo>=hi){ if(lo===hi) sorted.add(lo); return; }
-    const p = partition(arr, lo, hi);
-    quickSort(arr, lo, p-1);
-    quickSort(arr, p+1, hi);
-  }
-
-  quickSort(a, 0, n-1);
-  const allSorted = Array.from({length:n},(_,i)=>i);
-  s.push({ type:'done', sorted:allSorted, pseudo:9,
-    action:'✓ Array fully sorted!',
-    detail:'Quick sort complete. All partitions have been sorted recursively.',
-    vars:[], arr:[...a] });
-  return s;
-}
-
-function generateHeapSteps(a) {
-  const s = [];
-  const n = a.length;
-  const sorted = new Set();
-
-  function heapify(arr, n, i, heapSize) {
-    let largest = i;
-    const l = 2*i+1, r = 2*i+2;
-    s.push({ type:'heapify', i, lo:i, hi:heapSize-1, sorted:[...sorted], pseudo:9,
-      action:`Heapifying at index ${i}, value ${arr[i]}`,
-      detail:`Checking if arr[${i}]=${arr[i]} is largest among itself and its children${l<heapSize?' ('+arr[l]+')':''}.`,
-      vars:[{k:'i',v:i},{k:'val',v:arr[i]},{k:'left',v:l<heapSize?arr[l]:'—'},{k:'right',v:r<heapSize?arr[r]:'—'}], arr:[...arr] });
-    if(l<heapSize && arr[l]>arr[largest]) largest=l;
-    if(r<heapSize && arr[r]>arr[largest]) largest=r;
-    if(largest!==i){
-      [arr[i],arr[largest]]=[arr[largest],arr[i]];
-      s.push({ type:'swap', i, j:largest, sorted:[...sorted], pseudo:7,
-        action:`Swap arr[${i}]=${arr[i]} and arr[${largest}]=${arr[largest]}`,
-        detail:`Parent was smaller than child — swap to maintain heap property (parent ≥ children).`,
-        vars:[{k:'i',v:i},{k:'largest',v:largest}], arr:[...arr] });
-      heapify(arr, n, largest, heapSize);
+  // Weighted score
+  let totalW=0, matchW=0;
+  for(const [cat,data] of Object.entries(TAXONOMY)){
+    const jCat = new Set(jKws[cat]||[]), rCat = new Set(rKws[cat]||[]);
+    if(jCat.size){
+      totalW += jCat.size * data.weight;
+      matchW += [...jCat].filter(k=>rCat.has(k)).length * data.weight;
     }
   }
+  let score = totalW>0?(matchW/totalW)*100:0;
+  const jWords = new Set(getWords(jc)), rWords = new Set(getWords(rc));
+  score = Math.min(99, score + Math.min(10,[...jWords].filter(w=>rWords.has(w)).length*0.3));
 
-  s.push({ type:'build-start', sorted:[...sorted], pseudo:2,
-    action:'Building max heap from array',
-    detail:`Start from the last internal node (index ${Math.floor(n/2)-1}) and heapify downward.`,
-    vars:[{k:'n',v:n},{k:'start',v:Math.floor(n/2)-1}], arr:[...a] });
-
-  for(let i=Math.floor(n/2)-1;i>=0;i--) heapify(a, n, i, n);
-
-  s.push({ type:'heap-built', sorted:[...sorted], pseudo:4,
-    action:`Max heap built! Root ${a[0]} is the maximum`,
-    detail:'The array now satisfies the heap property. We can extract the max repeatedly.',
-    vars:[{k:'max',v:a[0]}], arr:[...a] });
-
-  for(let i=n-1;i>0;i--){
-    s.push({ type:'extract', i, sorted:[...sorted], pseudo:6,
-      action:`Extracting max ${a[0]}, placing at index ${i}`,
-      detail:`Swap root (max=${a[0]}) with last element, then shrink heap. Index ${i} is now in final sorted position.`,
-      vars:[{k:'max',v:a[0]},{k:'place at',v:i}], arr:[...a] });
-    [a[0],a[i]]=[a[i],a[0]];
-    sorted.add(i);
-    s.push({ type:'swap', i:0, j:i, sorted:[...sorted], pseudo:6,
-      action:`Swapped: ${a[i]} moved to sorted position ${i}`,
-      detail:`Heap size reduced to ${i}. Now heapify the root to restore heap property.`,
-      vars:[{k:'heap size',v:i}], arr:[...a] });
-    heapify(a, n, 0, i);
+  // By category
+  const matchedByCat={}, missingByCat={};
+  for(const cat of Object.keys(TAXONOMY)){
+    const jCat=new Set(jKws[cat]||[]), rCat=new Set(rKws[cat]||[]);
+    const m=[...jCat].filter(k=>rCat.has(k)).sort();
+    const x=[...jCat].filter(k=>!rCat.has(k)).sort();
+    if(m.length) matchedByCat[cat]=m;
+    if(x.length) missingByCat[cat]=x;
   }
-  sorted.add(0);
-  const allSorted = Array.from({length:n},(_,i)=>i);
-  s.push({ type:'done', sorted:allSorted, pseudo:9,
-    action:'✓ Array fully sorted!',
-    detail:'Heap sort complete. All max extractions done, array is sorted ascending.',
-    vars:[], arr:[...a] });
-  return s;
+
+  // Missing phrases
+  const jNg=new Set(getNgrams(jc)), rNg=new Set(getNgrams(rc));
+  const missingPhrases=[...jNg]
+    .filter(p=>!rNg.has(p)&&!p.split(' ').every(w=>STOP.has(w)))
+    .sort((a,b)=>(jc.match(new RegExp(b,'g'))||[]).length-(jc.match(new RegExp(a,'g'))||[]).length)
+    .slice(0,8);
+
+  const bonusSkills=[...rFlat].filter(k=>!jFlat.has(k)).sort().slice(0,18);
+
+  const sections={
+    contact:    /email|phone|@|\d{3}/.test(rc),
+    education:  /education|university|college|degree|bachelor|master/.test(rc),
+    experience: /experience|work|employment|intern|developer|engineer/.test(rc),
+    projects:   /project|built|developed|created|designed/.test(rc),
+    skills:     /skill|proficien|technolog|language/.test(rc),
+    summary:    /summary|objective|profile|about me/.test(rc),
+  };
+
+  const grade = score>=85?'A':score>=75?'B':score>=60?'C':score>=45?'D':'F';
+
+  return {
+    score:Math.round(score*10)/10, grade,
+    matched:matched.size, missing:missing.size,
+    total:jFlat.size,
+    matchedByCat, missingByCat,
+    missingPhrases, bonusSkills, sections
+  };
 }
 
-// ── RENDERING ──────────────────────────────────────────────────────────────
-function generateArray() {
-  stopAll();
-  const size = parseInt(document.getElementById('sizeSlider').value);
-  arr = Array.from({length:size}, ()=>Math.floor(Math.random()*95)+5);
-  renderAll(arr, [], [], [], [], []);
-  resetCounters();
-  steps = [];
-  stepIdx = 0;
-  document.getElementById('doneBanner').style.display='none';
-  updateStepPanel({
-    action:'Array generated — ready!',
-    detail:`${size} random values loaded. Press Start to run ${ALGO_INFO[currentAlgo]?.title||currentAlgo} or Step to go one step at a time.`,
-    vars:[{k:'size',v:size},{k:'algo',v:ALGO_INFO[currentAlgo]?.title||currentAlgo}]
-  }, [], 0, size);
+// ── SCORE HELPERS ─────────────────────────────────────────────────────────
+function scoreColor(s){ return s>=75?'var(--green)':s>=55?'var(--yellow)':'var(--red)'; }
+function scoreMsg(s){
+  if(s>=85) return ['Excellent Match!','Your resume strongly aligns with this job. You\'re a competitive candidate — apply with confidence.'];
+  if(s>=75) return ['Good Match','Strong alignment with a few gaps. Address the missing keywords to improve your chances.'];
+  if(s>=60) return ['Moderate Match','Worth applying, but tailor your resume with more of the missing keywords before submitting.'];
+  if(s>=45) return ['Weak Match','Significant keyword gaps found. Consider whether this role fits your current profile.'];
+  return ['Low Match','Your resume is missing many key requirements. Focus on roles that better match your skill set.'];
 }
 
-function renderAll(a, comparing, swapping, sorted, pivot, current) {
-  renderBars(a, comparing, swapping, sorted, pivot, current);
-  renderCells(a, comparing, swapping, sorted, pivot, current);
-  renderArrayState(a, comparing, swapping, sorted, pivot, current);
-}
-
-function renderBars(a, comparing=[], swapping=[], sorted=[], pivot=[], current=[]) {
-  const wrap = document.getElementById('barsWrap');
-  const max = Math.max(...a, 1);
-  wrap.innerHTML = a.map((v,i)=>{
-    let cls = '';
-    if(swapping.includes(i)) cls='swapping';
-    else if(comparing.includes(i)) cls='comparing';
-    else if(pivot.includes(i)) cls='pivot';
-    else if(current.includes(i)) cls='current';
-    else if(sorted.includes(i)) cls='sorted';
-    const h = Math.max(8, Math.round((v/max)*188));
-    return `<div class="bar ${cls}" style="height:${h}px;background:${cls?'':getBarColor(i,a.length)}" data-val="${v}"></div>`;
-  }).join('');
-}
-
-function getBarColor(i, n) {
-  const hue = 220 + (i/n)*40;
-  return `hsl(${hue},60%,72%)`;
-}
-
-function renderCells(a, comparing=[], swapping=[], sorted=[], pivot=[], current=[]) {
-  const wrap = document.getElementById('cellsWrap');
-  wrap.innerHTML = a.map((v,i)=>{
-    let cls='';
-    if(swapping.includes(i)) cls='swapping';
-    else if(comparing.includes(i)) cls='comparing';
-    else if(pivot.includes(i)) cls='pivot';
-    else if(current.includes(i)) cls='current';
-    else if(sorted.includes(i)) cls='sorted';
-    return `<div class="arr-cell">
-      <div class="arr-val ${cls}">${v}</div>
-      <div class="arr-idx">[${i}]</div>
+// ── RENDER ────────────────────────────────────────────────────────────────
+function renderKws(containerId, byCat, tagClass, emptyMsg){
+  const el = document.getElementById(containerId);
+  if(!Object.keys(byCat).length){
+    el.innerHTML=`<div class="no-items">${emptyMsg}</div>`; return;
+  }
+  el.innerHTML = Object.entries(byCat).map(([cat,kws])=>{
+    const {icon,label}=TAXONOMY[cat]||{icon:'·',label:cat};
+    return `<div class="cat-block">
+      <div class="cat-label">${icon} ${label}</div>
+      <div class="tags-row">${kws.map((k,i)=>
+        `<span class="tag ${tagClass}" style="animation-delay:${i*.04}s">${k}</span>`
+      ).join('')}</div>
     </div>`;
   }).join('');
 }
 
-function renderArrayState(a, comparing=[], swapping=[], sorted=[], pivot=[], current=[]) {
-  const wrap = document.getElementById('arrayState');
-  const cells = a.map((v,i)=>{
-    let cls='';
-    if(swapping.includes(i)) cls='swapping';
-    else if(comparing.includes(i)) cls='comparing';
-    else if(pivot.includes(i)) cls='pivot';
-    else if(current.includes(i)) cls='current';
-    else if(sorted.includes(i)) cls='sorted';
-    return `<div class="arr-cell">
-      <div class="arr-val ${cls}" style="width:30px;height:30px;font-size:11px;">${v}</div>
-      <div class="arr-idx">[${i}]</div>
+function generateRecs(r){
+  const recs=[];
+  const {score,missingByCat,sections,bonusSkills}=r;
+  if(score<50) recs.push('<strong>Critical:</strong> Under 50% match. Heavily tailor this resume before applying — add relevant keywords throughout.');
+  if(missingByCat.languages?.length) recs.push(`<strong>Languages:</strong> The JD mentions <em>${missingByCat.languages.slice(0,3).join(', ')}</em>. If you have any experience, add them explicitly to your skills section.`);
+  if(missingByCat.frameworks?.length) recs.push(`<strong>Frameworks:</strong> <em>${missingByCat.frameworks.slice(0,3).join(', ')}</em> appear in the JD. Even basic familiarity is worth mentioning.`);
+  if(missingByCat.devops?.length) recs.push('<strong>DevOps/Cloud:</strong> This role emphasizes cloud skills. Highlight any Docker, CI/CD, or cloud platform experience from your projects.');
+  if(!sections.summary) recs.push('<strong>Add a Summary:</strong> A professional summary at the top lets you front-load keywords and immediately show your fit.');
+  if(!sections.projects) recs.push('<strong>Projects Section Missing:</strong> No projects detected. Adding projects with relevant tech stacks significantly boosts ATS scores.');
+  if(missingByCat.soft?.length) recs.push(`<strong>Soft Skills:</strong> The JD mentions <em>${missingByCat.soft.slice(0,3).join(', ')}</em>. Weave these naturally into your bullet points.`);
+  if(bonusSkills.length>5) recs.push(`<strong>Bonus Skills:</strong> You have ${bonusSkills.length} skills not in this JD. Great overall — just make sure the required ones are prominent.`);
+  if(score>=75) recs.push('<strong>Looking Good:</strong> Strong match! Use your cover letter to address any remaining gaps and emphasize measurable impact.');
+  if(!recs.length) recs.push('<strong>Great Match:</strong> Your resume aligns well. Focus on adding measurable outcomes to your bullet points.');
+  return recs;
+}
+
+function runScan(){
+  const resume = document.getElementById('resume-paste').style.display!=='none'
+    ? document.getElementById('resumeText').value.trim()
+    : resumeContent;
+  const jd = document.getElementById('jd-paste').style.display!=='none'
+    ? document.getElementById('jdText').value.trim()
+    : jdContent;
+
+  if(!resume){ alert('Please paste or upload your resume first.'); return; }
+  if(!jd){ alert('Please paste or upload the job description first.'); return; }
+
+  const btn=document.getElementById('scanBtn');
+  btn.classList.add('loading'); btn.disabled=true;
+
+  setTimeout(()=>{
+    const result = analyze(resume, jd);
+
+    btn.classList.remove('loading'); btn.disabled=false;
+    document.getElementById('emptyState').style.display='none';
+    document.getElementById('results').style.display='block';
+
+    // Score ring animation
+    const circ = 2*Math.PI*40;
+    const offset = circ-(result.score/100)*circ;
+    const col = scoreColor(result.score);
+    const ring = document.getElementById('scoreRing');
+    ring.style.stroke = col;
+    setTimeout(()=>{ ring.style.strokeDashoffset = offset; }, 80);
+
+    // Score text
+    document.getElementById('scorePct').textContent = result.score+'%';
+    document.getElementById('scorePct').style.color = col;
+    document.getElementById('scoreGrade').textContent = 'Grade '+result.grade;
+    const [title,msg] = scoreMsg(result.score);
+    document.getElementById('scoreTitle').textContent = title;
+    document.getElementById('scoreMsg').textContent = msg;
+    document.getElementById('progFill').style.width = result.score+'%';
+    document.getElementById('progFill').style.background = col;
+
+    // Pills
+    document.getElementById('scorePills').innerHTML=`
+      <span class="pill pill-g">✓ ${result.matched} matched</span>
+      <span class="pill pill-r">✗ ${result.missing} missing</span>
+      ${result.bonusSkills.length?`<span class="pill pill-b">+ ${result.bonusSkills.length} bonus</span>`:''}
+      <span class="pill pill-o">Grade ${result.grade}</span>`;
+
+    // Quick stats
+    document.getElementById('qsTotal').textContent = result.total;
+    document.getElementById('qsMatched').textContent = result.matched;
+    document.getElementById('qsMissing').textContent = result.missing;
+    document.getElementById('matchedCount').textContent = result.matched;
+    document.getElementById('missingCount').textContent = result.missing;
+    document.getElementById('bonusCount').textContent = result.bonusSkills.length;
+
+    // Keywords
+    renderKws('matchedBody', result.matchedByCat, 'tag-match', 'No matched keywords found.');
+    renderKws('missingBody', result.missingByCat, 'tag-miss', 'No missing keywords — great!');
+
+    // Bonus
+    const bonusEl=document.getElementById('bonusBody');
+    if(result.bonusSkills.length){
+      bonusEl.innerHTML=`<div class="tags-row">${result.bonusSkills.map((k,i)=>
+        `<span class="tag tag-bonus" style="animation-delay:${i*.03}s">${k}</span>`).join('')}</div>`;
+    } else {
+      bonusEl.innerHTML='<div class="no-items">No bonus skills found.</div>';
+    }
+
+    // Sections
+    document.getElementById('sectionsBody').innerHTML=`<div class="section-grid">
+      ${Object.entries(result.sections).map(([k,v])=>`
+        <div class="sec-item ${v?'ok':'miss'}">
+          <span class="sec-icon">${SECTION_ICONS[k]||'·'}</span>
+          <span style="font-size:12px">${k.charAt(0).toUpperCase()+k.slice(1)}</span>
+          <span class="sec-status ${v?'ok':'miss'}">${v?'✓ Found':'✗ Missing'}</span>
+        </div>`).join('')}
     </div>`;
-  }).join('');
-  wrap.innerHTML = `<span class="arr-label">array[]</span>${cells}`;
+
+    // Phrases
+    const phEl=document.getElementById('phrasesBody');
+    document.getElementById('phrasesCount').textContent=result.missingPhrases.length;
+    if(result.missingPhrases.length){
+      phEl.innerHTML=result.missingPhrases.map(p=>`<div class="phrase-item">${p}</div>`).join('');
+    } else {
+      phEl.innerHTML='<div class="no-items">No key phrases missing — great match!</div>';
+    }
+
+    // Recs
+    const recs=generateRecs(result);
+    document.getElementById('recsBody').innerHTML=recs.map((r,i)=>`
+      <div class="rec-item" style="animation-delay:${i*.07}s">
+        <div class="rec-num">${i+1}.</div>
+        <div class="rec-text">${r}</div>
+      </div>`).join('');
+
+    document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+  }, 350);
 }
 
-function renderPseudo(algoKey) {
-  const info = currentCategory==='sorting' ? ALGO_INFO[algoKey] : GRAPH_ALGOS[algoKey];
-  if(!info) return;
-  const body = document.getElementById('pseudoBody');
-  body.innerHTML = (info.pseudo||[]).map(p=>
-    `<span class="pline" id="pline-${p.id}">${p.code}</span>`
-  ).join('');
-  document.getElementById('pseudoAlgoName').textContent = info.title;
+// ── UI HELPERS ────────────────────────────────────────────────────────────
+let resumeContent='', jdContent='';
+
+function switchTab(which, mode, btn){
+  const pre=which==='resume'?'resume':'jd';
+  document.getElementById(`${pre}-paste`).style.display=mode==='paste'?'':'none';
+  document.getElementById(`${pre}-upload`).style.display=mode==='upload'?'':'none';
+  btn.closest('.tab-pair').querySelectorAll('.tp-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
 }
 
-function highlightPseudo(lineId) {
-  document.querySelectorAll('.pline').forEach(l=>l.classList.remove('active'));
-  const el = document.getElementById(`pline-${lineId}`);
-  if(el){ el.classList.add('active'); el.scrollIntoView({block:'nearest',behavior:'smooth'}); }
-}
-
-function updateStepPanel(step, arr, idx, total) {
-  document.getElementById('stepAction').textContent = step.action||'';
-  document.getElementById('stepDetail').textContent = step.detail||'';
-  document.getElementById('stepCounter').textContent = `Step ${idx} / ${total}`;
-
-  const vars = document.getElementById('stepVars');
-  vars.innerHTML = (step.vars||[]).map(v=>
-    `<span class="var-chip"><span class="vk">${v.k} = </span><span class="vv">${v.v}</span></span>`
-  ).join('');
-}
-
-function renderConcepts(algoKey) {
-  const info = currentCategory==='sorting' ? ALGO_INFO[algoKey] : GRAPH_ALGOS[algoKey];
-  const grid = document.getElementById('conceptsGrid');
-  if(!info?.concepts){ grid.innerHTML=''; return; }
-  grid.innerHTML = info.concepts.map(c=>`
-    <div class="concept-card">
-      <div class="cc-icon">${c.icon}</div>
-      <div class="cc-title">${c.title}</div>
-      <div class="cc-body">${c.body}</div>
-    </div>`).join('');
-}
-
-function updateInfoCard(algoKey) {
-  const info = currentCategory==='sorting' ? ALGO_INFO[algoKey] : GRAPH_ALGOS[algoKey];
-  if(!info) return;
-  document.getElementById('algoTitle').textContent = info.title;
-  document.getElementById('algoDesc').textContent = info.desc;
-  document.getElementById('cxBest').textContent = info.best;
-  document.getElementById('cxAvg').textContent = info.avg;
-  document.getElementById('cxWorst').textContent = info.worst;
-  document.getElementById('cxSpace').textContent = info.space;
-  document.getElementById('cxBest').className = `cx-val ${info.bestClass}`;
-  document.getElementById('cxAvg').className = `cx-val ${info.avgClass}`;
-  document.getElementById('cxWorst').className = `cx-val ${info.worstClass}`;
-  document.getElementById('cxSpace').className = `cx-val ${info.spaceClass}`;
-}
-
-function resetCounters() {
-  comparisons=0; swaps=0;
-  document.getElementById('statComparisons').textContent='0';
-  document.getElementById('statSwaps').textContent='0';
-  document.getElementById('statSteps').textContent='0';
-}
-
-function applyStep(s) {
-  const comparing = s.type==='compare'||s.type==='heapify' ? [s.i, s.j||s.lo] : [];
-  const swapping   = s.type==='swap'||s.type==='shift' ? [s.i, s.j||s.from||s.to] : [];
-  const sorted     = s.sorted||[];
-  const pivot      = s.type==='pivot'||s.type==='pivot-placed' ? [s.pivotIdx] : [];
-  const current    = s.type==='pick-key'||s.type==='insert'||s.type==='new-min'||s.type==='merge-place' ? [s.i||s.pos||s.k||s.minIdx] : [];
-
-  if(s.arr) renderAll(s.arr, comparing, swapping, sorted, pivot, current);
-
-  if(s.type==='compare') comparisons++;
-  if(s.type==='swap') swaps++;
-  document.getElementById('statComparisons').textContent=comparisons;
-  document.getElementById('statSwaps').textContent=swaps;
-  document.getElementById('statSteps').textContent=stepIdx;
-
-  updateStepPanel(s, s.arr||arr, stepIdx, steps.length);
-  if(s.pseudo!==undefined) highlightPseudo(s.pseudo);
-
-  if(s.type==='done'){
-    document.getElementById('doneBanner').style.display='block';
-    document.getElementById('startBtn').disabled=false;
-    document.getElementById('pauseBtn').disabled=true;
-    running=false;
-  }
-}
-
-// ── CONTROLS ───────────────────────────────────────────────────────────────
-function buildSteps() {
-  const a = [...arr];
-  switch(currentAlgo){
-    case 'bubble':    steps = generateBubbleSteps(a); break;
-    case 'selection': steps = generateSelectionSteps(a); break;
-    case 'insertion': steps = generateInsertionSteps(a); break;
-    case 'merge':     steps = generateMergeSteps(a); break;
-    case 'quick':     steps = generateQuickSteps(a); break;
-    case 'heap':      steps = generateHeapSteps(a); break;
-    default: steps=[];
-  }
-  stepIdx=0; comparisons=0; swaps=0;
-}
-
-function getDelay() {
-  const v = parseInt(document.getElementById('speedSlider').value);
-  return Math.round(1000 / (v * 1.5));
-}
-
-async function startSort() {
-  if(!arr.length){ generateArray(); return; }
-  if(stepIdx===0) buildSteps();
-  if(stepIdx>=steps.length){ resetAll(); buildSteps(); }
-
-  running=true; paused=false;
-  document.getElementById('startBtn').disabled=true;
-  document.getElementById('pauseBtn').disabled=false;
-  document.getElementById('doneBanner').style.display='none';
-
-  while(stepIdx<steps.length && running && !paused){
-    applyStep(steps[stepIdx]);
-    stepIdx++;
-    await sleep(getDelay());
-  }
-
-  if(stepIdx>=steps.length){
-    running=false;
-    document.getElementById('startBtn').disabled=false;
-    document.getElementById('pauseBtn').disabled=true;
-  }
-}
-
-function stepOnce() {
-  if(!arr.length){ generateArray(); return; }
-  if(stepIdx===0) buildSteps();
-  if(stepIdx<steps.length){ applyStep(steps[stepIdx]); stepIdx++; }
-  document.getElementById('doneBanner').style.display = stepIdx>=steps.length?'block':'none';
-}
-
-function togglePause() {
-  if(!running) return;
-  paused=!paused;
-  document.getElementById('pauseBtn').textContent = paused ? '▶ Resume' : '⏸ Pause';
-  if(!paused) startSort();
-}
-
-function stopAll() {
-  running=false; paused=false;
-  clearTimeout(timer);
-  document.getElementById('startBtn').disabled=false;
-  document.getElementById('pauseBtn').disabled=true;
-  document.getElementById('pauseBtn').textContent='⏸ Pause';
-}
-
-function resetAll() {
-  stopAll();
-  stepIdx=0; steps=[];
-  resetCounters();
-  document.getElementById('doneBanner').style.display='none';
-  if(arr.length) renderAll(arr,[],[],[],[],[]);
-  updateStepPanel({action:'Reset — ready to go again.',detail:'Press Start or Step to begin.',vars:[]},arr,0,0);
-  document.querySelectorAll('.pline').forEach(l=>l.classList.remove('active'));
-}
-
-function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
-
-function loadCustom() {
-  const v = document.getElementById('customInput').value;
-  const nums = v.split(/[,\s]+/).map(Number).filter(n=>!isNaN(n)&&n>0&&n<=200);
-  if(!nums.length){ alert('Enter valid numbers separated by commas (e.g. 5,3,8,1)'); return; }
-  arr = nums.slice(0,30);
-  steps=[]; stepIdx=0;
-  document.getElementById('sizeSlider').value=arr.length;
-  document.getElementById('sizeVal').textContent=arr.length;
-  renderAll(arr,[],[],[],[],[]);
-  resetCounters();
-  document.getElementById('doneBanner').style.display='none';
-  document.getElementById('customInput').value='';
-  updateStepPanel({action:`Custom array loaded (${arr.length} elements)`,detail:'Press Start or Step to visualize.',vars:[{k:'size',v:arr.length}]},arr,0,0);
-}
-
-function onSizeChange() {
-  const v = document.getElementById('sizeSlider').value;
-  document.getElementById('sizeVal').textContent=v;
-  arrSize=parseInt(v);
-  generateArray();
-}
-
-document.getElementById('speedSlider').addEventListener('input',function(){
-  document.getElementById('speedVal').textContent=this.value;
-});
-
-// ── ALGO/CATEGORY SWITCHING ────────────────────────────────────────────────
-function selectAlgo(name, btn) {
-  stopAll(); steps=[]; stepIdx=0; resetCounters();
-  document.getElementById('doneBanner').style.display='none';
-  currentAlgo = name;
-  document.querySelectorAll('#algoSelect .algo-name').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  updateInfoCard(name);
-  renderPseudo(name);
-  renderConcepts(name);
-  if(arr.length) renderAll(arr,[],[],[],[],[]);
-  updateStepPanel({action:`${ALGO_INFO[name]?.title} selected`,detail:'Press Start to visualize or Step to go one step at a time.',vars:[]},arr,0,0);
-}
-
-function switchCategory(cat, btn) {
-  stopAll(); steps=[]; stepIdx=0;
-  currentCategory=cat;
-  arr=[];
-  document.querySelectorAll('.algo-tab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-
-  const sortingEl = document.getElementById('algoSelect');
-  const vizTitle = document.getElementById('vizTitle');
-
-  if(cat==='sorting'){
-    sortingEl.innerHTML=`
-      <button class="algo-name active" id="btn-bubble" onclick="selectAlgo('bubble',this)">Bubble</button>
-      <button class="algo-name" id="btn-selection" onclick="selectAlgo('selection',this)">Selection</button>
-      <button class="algo-name" id="btn-insertion" onclick="selectAlgo('insertion',this)">Insertion</button>
-      <button class="algo-name" id="btn-merge" onclick="selectAlgo('merge',this)">Merge</button>
-      <button class="algo-name" id="btn-quick" onclick="selectAlgo('quick',this)">Quick</button>
-      <button class="algo-name" id="btn-heap" onclick="selectAlgo('heap',this)">Heap</button>`;
-    vizTitle.textContent='Sorting Algorithms';
-    currentAlgo='bubble';
-    document.getElementById('barsView').style.display='block';
-    document.getElementById('arrayView').style.display='none';
-    updateInfoCard('bubble');
-    renderPseudo('bubble');
-    renderConcepts('bubble');
-    generateArray();
+function handleFile(which, input){
+  const file=input.files[0]; if(!file) return;
+  const nameEl=document.getElementById(`${which}FName`);
+  const zone=document.getElementById(which==='resume'?'resumeDrop':'jdDrop');
+  zone.classList.add('has');
+  const reader=new FileReader();
+  if(file.name.endsWith('.pdf')){
+    reader.readAsBinaryString(file);
+    reader.onload=e=>{
+      const parts=[], raw=e.target.result;
+      const blocks=raw.match(/BT[\s\S]*?ET/g)||[];
+      blocks.forEach(b=>{
+        (b.match(/\(([^)]*)\)\s*T[Jj]/g)||[]).forEach(s=>{
+          const m=s.match(/\(([^)]*)\)/);
+          if(m) parts.push(m[1].replace(/\\n/g,'\n').replace(/\\\d{3}/g,''));
+        });
+      });
+      const text=parts.join(' ').replace(/\s+/g,' ').trim()||raw.replace(/[^\x20-\x7E\n]/g,' ').trim();
+      if(which==='resume') resumeContent=text; else jdContent=text;
+      nameEl.textContent='✓ '+file.name+(text.length<100?' (limited — try .txt)':'');
+    };
   } else {
-    sortingEl.innerHTML=`
-      <button class="algo-name active" onclick="selectGraphAlgo('bfs',this)">BFS</button>
-      <button class="algo-name" onclick="selectGraphAlgo('dfs',this)">DFS</button>
-      <button class="algo-name" onclick="selectGraphAlgo('dijkstra',this)">Dijkstra</button>`;
-    vizTitle.textContent='Graph Algorithms';
-    currentAlgo='bfs';
-    document.getElementById('barsView').style.display='none';
-    document.getElementById('arrayView').style.display='none';
-    updateInfoCard('bfs');
-    renderPseudo('bfs');
-    renderConcepts('bfs');
-    renderGraphPlaceholder();
+    reader.readAsText(file);
+    reader.onload=e=>{
+      if(which==='resume') resumeContent=e.target.result;
+      else jdContent=e.target.result;
+      nameEl.textContent='✓ '+file.name;
+    };
   }
 }
 
-function selectGraphAlgo(name, btn) {
-  currentAlgo=name;
-  document.querySelectorAll('#algoSelect .algo-name').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  updateInfoCard(name);
-  renderPseudo(name);
-  renderConcepts(name);
-  renderGraphPlaceholder();
+function onDrag(e,over,id){ e.preventDefault(); document.getElementById(id).classList.toggle('drag',over); }
+function onDrop(e,which){
+  e.preventDefault();
+  const zoneId=which==='resume'?'resumeDrop':'jdDrop';
+  document.getElementById(zoneId).classList.remove('drag');
+  const file=e.dataTransfer.files[0]; if(!file) return;
+  handleFile(which,{files:[file]});
 }
 
-function renderGraphPlaceholder() {
-  document.getElementById('arrayState').innerHTML = `
-    <span class="arr-label">graph</span>
-    <span style="font-size:11px;color:var(--muted2);font-family:var(--mono)">Click Start to run ${GRAPH_ALGOS[currentAlgo]?.title||''}</span>`;
-  renderGraphViz();
+function clearAll(){
+  document.getElementById('resumeText').value='';
+  document.getElementById('jdText').value='';
+  document.getElementById('results').style.display='none';
+  document.getElementById('emptyState').style.display='block';
+  resumeContent=''; jdContent='';
+  ['resumeFName','jdFName'].forEach(id=>document.getElementById(id).textContent='');
+  document.querySelectorAll('.upload-zone').forEach(z=>z.classList.remove('has','drag'));
+  // Reset ring
+  document.getElementById('scoreRing').style.strokeDashoffset='251';
+  window.scrollTo({top:0,behavior:'smooth'});
 }
-
-// ── GRAPH VISUALIZATION ────────────────────────────────────────────────────
-const GRAPH = {
-  nodes: [
-    {id:'A',x:.15,y:.2},{id:'B',x:.35,y:.1},{id:'C',x:.55,y:.2},
-    {id:'D',x:.75,y:.1},{id:'E',x:.15,y:.6},{id:'F',x:.35,y:.5},
-    {id:'G',x:.55,y:.6},{id:'H',x:.75,y:.5},{id:'I',x:.45,y:.85}
-  ],
-  edges:[
-    {a:'A',b:'B',w:4},{a:'A',b:'E',w:2},{a:'B',b:'C',w:3},{a:'B',b:'F',w:5},
-    {a:'C',b:'D',w:2},{a:'C',b:'G',w:4},{a:'D',b:'H',w:1},{a:'E',b:'F',w:3},
-    {a:'F',b:'G',w:2},{a:'F',b:'I',w:6},{a:'G',b:'H',w:3},{a:'G',b:'I',w:2},
-    {a:'H',b:'I',w:4}
-  ]
-};
-
-let graphSteps=[], graphStepIdx=0, graphState={};
-
-function renderGraphViz(visited=new Set(), current=null, queued=new Set(), path=new Set()) {
-  const wrap = document.getElementById('barsView');
-  wrap.style.display='block';
-  const W=wrap.offsetWidth||600, H=240;
-  let svg=`<svg width="${W}" height="${H}" style="display:block;">`;
-
-  // Edges
-  GRAPH.edges.forEach(e=>{
-    const a=GRAPH.nodes.find(n=>n.id===e.a);
-    const b=GRAPH.nodes.find(n=>n.id===e.b);
-    const x1=a.x*W, y1=a.y*H+10, x2=b.x*W, y2=b.y*H+10;
-    const isPath = path.has(e.a+'-'+e.b)||path.has(e.b+'-'+e.a);
-    svg+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
-      stroke="${isPath?'var(--green)':'var(--border2)'}"
-      stroke-width="${isPath?3:1.5}" opacity="${isPath?1:.7}"/>`;
-    if(currentAlgo==='dijkstra'){
-      const mx=(x1+x2)/2, my=(y1+y2)/2;
-      svg+=`<rect x="${mx-10}" y="${my-9}" width="20" height="16" rx="4" fill="white" stroke="var(--border)" stroke-width="1"/>`;
-      svg+=`<text x="${mx}" y="${my+4}" text-anchor="middle" font-size="10" font-family="DM Mono" fill="var(--muted)">${e.w}</text>`;
-    }
-  });
-
-  // Nodes
-  GRAPH.nodes.forEach(n=>{
-    const x=n.x*W, y=n.y*H+10;
-    let fill='var(--bar-default)', textFill='var(--text)', stroke='var(--border2)', sw=1.5;
-    if(n.id===current){ fill='var(--blue)'; textFill='white'; sw=3; }
-    else if(path.has(n.id)){ fill='var(--green)'; textFill='white'; }
-    else if(queued.has(n.id)){ fill='var(--yellow)'; textFill='white'; }
-    else if(visited.has(n.id)){ fill='var(--bar-visited)'; textFill='white'; }
-    svg+=`<circle cx="${x}" cy="${y}" r="18" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
-    svg+=`<text x="${x}" y="${y+5}" text-anchor="middle" font-size="13" font-weight="600" font-family="DM Mono" fill="${textFill}">${n.id}</text>`;
-  });
-
-  svg+='</svg>';
-  wrap.innerHTML=svg;
-}
-
-function generateGraphSteps(algoName) {
-  const steps=[];
-  if(algoName==='bfs'){
-    const adj={};
-    GRAPH.nodes.forEach(n=>adj[n.id]=[]);
-    GRAPH.edges.forEach(e=>{ adj[e.a].push(e.b); adj[e.b].push(e.a); });
-    const visited=new Set(), queue=['A'];
-    visited.add('A');
-    steps.push({visited:new Set(visited),current:'A',queued:new Set(['A']),path:new Set(),pseudo:1,
-      action:'Start BFS from node A',detail:'Initialize: mark A as visited, add to queue.',vars:[{k:'queue',v:'[A]'}]});
-    while(queue.length){
-      const node=queue.shift();
-      steps.push({visited:new Set(visited),current:node,queued:new Set(queue),path:new Set(),pseudo:3,
-        action:`Dequeue node ${node} — processing`,detail:`Exploring all unvisited neighbours of ${node}.`,vars:[{k:'node',v:node},{k:'queue',v:'['+queue.join(',')+']'}]});
-      for(const nb of adj[node]){
-        if(!visited.has(nb)){
-          visited.add(nb); queue.push(nb);
-          steps.push({visited:new Set(visited),current:nb,queued:new Set(queue),path:new Set(),pseudo:7,
-            action:`Visit ${nb} (neighbour of ${node})`,detail:`${nb} not visited — mark visited and enqueue.`,vars:[{k:'visited',v:nb},{k:'queue',v:'['+queue.join(',')+']'}]});
-        }
-      }
-    }
-    steps.push({visited:new Set(visited),current:null,queued:new Set(),path:new Set(),pseudo:8,
-      action:'BFS complete — all nodes visited',detail:`Visited in order: ${[...visited].join(' → ')}`,vars:[{k:'order',v:[...visited].join('→')}]});
-  } else if(algoName==='dfs'){
-    const adj={};
-    GRAPH.nodes.forEach(n=>adj[n.id]=[]);
-    GRAPH.edges.forEach(e=>{ adj[e.a].push(e.b); adj[e.b].push(e.a); });
-    const visited=new Set();
-    const order=[];
-    function dfs(node){
-      visited.add(node); order.push(node);
-      steps.push({visited:new Set(visited),current:node,queued:new Set(),path:new Set(),pseudo:1,
-        action:`Visit node ${node}`,detail:`Mark ${node} as visited. Exploring its unvisited neighbours.`,vars:[{k:'node',v:node},{k:'visited',v:[...visited].join(',')}]});
-      for(const nb of adj[node]){
-        if(!visited.has(nb)){
-          steps.push({visited:new Set(visited),current:nb,queued:new Set(),path:new Set(),pseudo:4,
-            action:`Go deeper: ${node} → ${nb}`,detail:`${nb} is unvisited — recurse into it.`,vars:[{k:'from',v:node},{k:'to',v:nb}]});
-          dfs(nb);
-          steps.push({visited:new Set(visited),current:node,queued:new Set(),path:new Set(),pseudo:6,
-            action:`Backtrack to ${node}`,detail:`All paths from subtree explored. Back at ${node}.`,vars:[{k:'backtrack to',v:node}]});
-        }
-      }
-    }
-    dfs('A');
-    steps.push({visited:new Set(visited),current:null,queued:new Set(),path:new Set(),pseudo:6,
-      action:'DFS complete',detail:`Visited: ${order.join(' → ')}`,vars:[{k:'order',v:order.join('→')}]});
-  } else {
-    // Dijkstra simplified
-    const adj={};
-    GRAPH.nodes.forEach(n=>adj[n.id]=[]);
-    GRAPH.edges.forEach(e=>{ adj[e.a].push({node:e.b,w:e.w}); adj[e.b].push({node:e.a,w:e.w}); });
-    const dist={}, prev={}, visited=new Set();
-    GRAPH.nodes.forEach(n=>{ dist[n.id]=Infinity; prev[n.id]=null; });
-    dist['A']=0;
-    const pq=[{node:'A',d:0}];
-    steps.push({visited:new Set(),current:'A',queued:new Set(['A']),path:new Set(),pseudo:1,
-      action:'Initialize Dijkstra from A',detail:'Set dist[A]=0, all others=∞. Add A to priority queue.',vars:[{k:'dist[A]',v:0}]});
-    while(pq.length){
-      pq.sort((a,b)=>a.d-b.d);
-      const {node}=pq.shift();
-      if(visited.has(node)) continue;
-      visited.add(node);
-      steps.push({visited:new Set(visited),current:node,queued:new Set(pq.map(x=>x.node)),path:new Set(),pseudo:4,
-        action:`Process node ${node} (dist=${dist[node]})`,detail:`${node} has the smallest tentative distance. Mark as finalized.`,vars:[{k:'node',v:node},{k:'dist',v:dist[node]}]});
-      for(const {node:nb, w} of adj[node]){
-        if(visited.has(nb)) continue;
-        const newDist=dist[node]+w;
-        if(newDist<dist[nb]){
-          dist[nb]=newDist; prev[nb]=node; pq.push({node:nb,d:newDist});
-          steps.push({visited:new Set(visited),current:nb,queued:new Set(pq.map(x=>x.node)),path:new Set(),pseudo:7,
-            action:`Relax edge ${node}→${nb}: new dist = ${newDist}`,detail:`Found shorter path to ${nb} via ${node}. Update dist[${nb}] = ${newDist}.`,vars:[{k:'dist['+nb+']',v:newDist},{k:'via',v:node}]});
-        }
-      }
-    }
-    // Build shortest path to I
-    const path=new Set();
-    let cur='I';
-    while(cur){ path.add(cur); cur=prev[cur]; }
-    steps.push({visited:new Set(visited),current:null,queued:new Set(),path,pseudo:8,
-      action:`Dijkstra complete! Shortest path A→I = dist ${dist['I']}`,detail:`Final distances: ${Object.entries(dist).map(([k,v])=>k+'='+v).join(', ')}`,vars:[{k:'dist[I]',v:dist['I']}]});
-  }
-  return steps;
-}
-
-// Override startSort for graph
-const origStartSort = startSort;
-async function startSort() {
-  if(currentCategory==='graph'){
-    graphSteps = generateGraphSteps(currentAlgo);
-    graphStepIdx = 0; comparisons=0; swaps=0;
-    running=true; paused=false;
-    document.getElementById('startBtn').disabled=true;
-    document.getElementById('pauseBtn').disabled=false;
-    while(graphStepIdx<graphSteps.length && running && !paused){
-      const s=graphSteps[graphStepIdx];
-      renderGraphViz(s.visited,s.current,s.queued,s.path);
-      updateStepPanel(s,[],graphStepIdx,graphSteps.length);
-      if(s.pseudo!==undefined) highlightPseudo(s.pseudo);
-      // Update array state with visited list
-      document.getElementById('arrayState').innerHTML=`
-        <span class="arr-label">visited</span>
-        ${[...s.visited].map(n=>`<div class="arr-cell"><div class="arr-val sorted" style="width:28px;height:28px;font-size:11px;">${n}</div></div>`).join('')}`;
-      document.getElementById('statComparisons').textContent=[...s.visited].length;
-      document.getElementById('statSteps').textContent=graphStepIdx;
-      graphStepIdx++;
-      await sleep(getDelay()*2);
-    }
-    running=false;
-    document.getElementById('startBtn').disabled=false;
-    document.getElementById('pauseBtn').disabled=true;
-    document.getElementById('doneBanner').textContent=`✓ ${GRAPH_ALGOS[currentAlgo]?.title} complete!`;
-    document.getElementById('doneBanner').style.display='block';
-  } else {
-    await origStartSort();
-  }
-}
-
-// Override stepOnce for graph
-const origStepOnce = stepOnce;
-function stepOnce() {
-  if(currentCategory==='graph'){
-    if(graphStepIdx===0){ graphSteps=generateGraphSteps(currentAlgo); graphStepIdx=0; }
-    if(graphStepIdx<graphSteps.length){
-      const s=graphSteps[graphStepIdx];
-      renderGraphViz(s.visited,s.current,s.queued,s.path);
-      updateStepPanel(s,[],graphStepIdx,graphSteps.length);
-      if(s.pseudo!==undefined) highlightPseudo(s.pseudo);
-      document.getElementById('arrayState').innerHTML=`
-        <span class="arr-label">visited</span>
-        ${[...s.visited].map(n=>`<div class="arr-cell"><div class="arr-val sorted" style="width:28px;height:28px;font-size:11px;">${n}</div></div>`).join('')}`;
-      graphStepIdx++;
-    }
-  } else { origStepOnce(); }
-}
-
-// ── VIEW SWITCHING ─────────────────────────────────────────────────────────
-function switchView(view, btn) {
-  currentView=view;
-  document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  if(view==='bars'){
-    document.getElementById('barsView').style.display='block';
-    document.getElementById('arrayView').style.display='none';
-  } else {
-    document.getElementById('barsView').style.display='none';
-    document.getElementById('arrayView').style.display='block';
-  }
-}
-
-// ── INIT ───────────────────────────────────────────────────────────────────
-updateInfoCard('bubble');
-renderPseudo('bubble');
-renderConcepts('bubble');
-generateArray();
 </script>
 </body>
 </html>
