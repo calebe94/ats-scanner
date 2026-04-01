@@ -11,7 +11,15 @@ from typing import Optional
 
 from ats_scanner.extractor import extract_text, clean_text
 from ats_scanner.analyzer import compute_match
-from ats_scanner.reporter import print_report, save_report, col, Color as C, bold, header_line, center
+from ats_scanner.reporter import (
+    print_report,
+    save_report,
+    col,
+    Color as C,
+    bold,
+    header_line,
+    center,
+)
 
 
 BANNER = r"""
@@ -37,51 +45,44 @@ def parse_args(argv=None) -> argparse.Namespace:
         description=textwrap.dedent("""\
             ATS Scanner — Analyze how well your resume matches a job description.
 
-            Supports .txt and .pdf files, or paste text directly.
+            Supports .txt, .pdf, .tex, and .docx files, or paste text directly.
 
             Examples:
               python scan.py --resume resume.txt --jd job.txt
               python scan.py --resume resume.pdf --jd job.txt --output report.json
               python scan.py --resume resume.txt --jd job.txt --score-only
         """),
-        epilog="Built by Vedant Kadam · github.com/iamvk07/ats-scanner"
+        epilog="Built by Vedant Kadam · github.com/iamvk07/ats-scanner",
     )
 
     parser.add_argument(
-        "--resume", "-r",
+        "--resume",
+        "-r",
         required=False,
-        help="Path to your resume (.txt or .pdf)"
+        help="Path to your resume (.txt, .pdf, .tex, or .docx)",
     )
     parser.add_argument(
-        "--jd", "-j",
+        "--jd",
+        "-j",
         required=False,
-        help="Path to job description (.txt or .pdf)"
+        help="Path to job description (.txt, .pdf, .tex, or .docx)",
     )
     parser.add_argument(
-        "--output", "-o",
-        required=False,
-        help="Save report to file (.txt or .json)"
+        "--output", "-o", required=False, help="Save report to file (.txt or .json)"
     )
     parser.add_argument(
-        "--score-only", "-s",
+        "--score-only",
+        "-s",
         action="store_true",
-        help="Print only the score number (useful for scripting)"
+        help="Print only the score number (useful for scripting)",
     )
     parser.add_argument(
-        "--no-color",
-        action="store_true",
-        help="Disable colored output"
+        "--no-color", action="store_true", help="Disable colored output"
     )
     parser.add_argument(
-        "--demo",
-        action="store_true",
-        help="Run with built-in demo data"
+        "--demo", action="store_true", help="Run with built-in demo data"
     )
-    parser.add_argument(
-        "--version", "-v",
-        action="version",
-        version="%(prog)s 1.0.0"
-    )
+    parser.add_argument("--version", "-v", action="version", version="%(prog)s 1.0.0")
 
     return parser.parse_args(argv)
 
@@ -183,6 +184,7 @@ def main(argv=None) -> int:
     # Disable color if requested
     if args.no_color:
         import ats_scanner.reporter as reporter
+
         reporter.USE_COLOR = False
 
     # Print banner (unless score-only)
@@ -200,13 +202,20 @@ def main(argv=None) -> int:
             resume_raw = extract_text(args.resume)
             resume_name = os.path.basename(args.resume)
         except (ValueError, FileNotFoundError) as e:
-            print(col(f"\n  Error reading resume: {e}\n", C.BRIGHT_RED), file=sys.stderr)
+            print(
+                col(f"\n  Error reading resume: {e}\n", C.BRIGHT_RED), file=sys.stderr
+            )
             return 1
     else:
         if args.score_only:
-            print(col("Error: --resume required with --score-only", C.BRIGHT_RED), file=sys.stderr)
+            print(
+                col("Error: --resume required with --score-only", C.BRIGHT_RED),
+                file=sys.stderr,
+            )
             return 1
-        resume_raw = get_input_interactive("RESUME", "Step 1 of 2 — Paste your resume text")
+        resume_raw = get_input_interactive(
+            "RESUME", "Step 1 of 2 — Paste your resume text"
+        )
         resume_name = "pasted_resume"
 
     # Get JD text
@@ -215,13 +224,21 @@ def main(argv=None) -> int:
             jd_raw = extract_text(args.jd)
             jd_name = os.path.basename(args.jd)
         except (ValueError, FileNotFoundError) as e:
-            print(col(f"\n  Error reading job description: {e}\n", C.BRIGHT_RED), file=sys.stderr)
+            print(
+                col(f"\n  Error reading job description: {e}\n", C.BRIGHT_RED),
+                file=sys.stderr,
+            )
             return 1
     else:
         if args.score_only:
-            print(col("Error: --jd required with --score-only", C.BRIGHT_RED), file=sys.stderr)
+            print(
+                col("Error: --jd required with --score-only", C.BRIGHT_RED),
+                file=sys.stderr,
+            )
             return 1
-        jd_raw = get_input_interactive("JOB DESCRIPTION", "Step 2 of 2 — Paste the job description")
+        jd_raw = get_input_interactive(
+            "JOB DESCRIPTION", "Step 2 of 2 — Paste the job description"
+        )
         jd_name = "pasted_jd"
 
     if not resume_raw.strip():
@@ -229,7 +246,10 @@ def main(argv=None) -> int:
         return 1
 
     if not jd_raw.strip():
-        print(col("\n  Error: Job description text is empty.\n", C.BRIGHT_RED), file=sys.stderr)
+        print(
+            col("\n  Error: Job description text is empty.\n", C.BRIGHT_RED),
+            file=sys.stderr,
+        )
         return 1
 
     # Analyze

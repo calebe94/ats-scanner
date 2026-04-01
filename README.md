@@ -72,6 +72,12 @@ python scan.py --resume resume.txt --jd job_description.txt
 # .pdf files (basic support)
 python scan.py --resume resume.pdf --jd job.txt
 
+# .tex files (LaTeX resumes)
+python scan.py --resume resume.tex --jd job.txt
+
+# .docx files (Word documents)
+python scan.py --resume resume.docx --jd job.txt
+
 # Save report to JSON
 python scan.py --resume resume.txt --jd job.txt --output report.json
 ```
@@ -96,8 +102,8 @@ python scan.py --demo
 ## All Options
 
 ```
---resume,  -r    Path to resume (.txt or .pdf)
---jd,      -j    Path to job description (.txt or .pdf)
+--resume,  -r    Path to resume (.txt, .pdf, .tex, or .docx)
+--jd,      -j    Path to job description (.txt, .pdf, .tex, or .docx)
 --output,  -o    Save report as .txt or .json
 --score-only,-s  Print score number only
 --no-color       Disable colored output
@@ -108,7 +114,7 @@ python scan.py --demo
 
 ## How It Works
 
-1. **Extract** — reads text from .txt/.pdf files or direct input
+1. **Extract** — reads text from .txt/.pdf/.tex/.docx files or direct input
 2. **Tokenize** — cleans and normalizes text
 3. **Match** — compares against a taxonomy of 200+ tech keywords across 8 categories
 4. **Weight** — assigns category weights (languages: 10, frameworks: 9, databases: 8...)
@@ -136,13 +142,14 @@ ats-scanner/
 ├── ats_scanner/
 │   ├── __init__.py
 │   ├── cli.py                 # CLI argument parsing & interactive mode
-│   ├── extractor.py           # Text extraction (.txt, .pdf, raw)
+│   ├── extractor.py           # Text extraction (.txt, .pdf, .tex, .docx, raw)
 │   ├── analyzer.py            # Core keyword matching engine
 │   └── reporter.py            # Terminal report generation
 ├── tests/
 │   └── test_analyzer.py       # Unit tests (25 test cases)
 ├── sample_data/
 │   ├── sample_resume.txt      # Example resume
+│   ├── sample_resume.tex      # Example resume (LaTeX)
 │   └── sample_job.txt         # Example job description
 ├── requirements.txt           # Zero dependencies!
 └── README.md
@@ -160,7 +167,7 @@ pytest tests/ -v
 
 ## Why Zero Dependencies?
 
-Most Python CLI tools require installing packages like `click`, `rich`, or `colorama`. ATS Scanner uses only the Python standard library — which means:
+Most Python CLI tools require installing packages like `click`, `rich`, or `colorama`. ATS Scanner uses only the Python standard library — which means DOCX support uses Python's built-in `zipfile` and `xml.etree` — still zero external dependencies:
 
 - ✅ Works anywhere Python is installed
 - ✅ No `pip install` needed
@@ -170,6 +177,8 @@ Most Python CLI tools require installing packages like `click`, `rich`, or `colo
 ## Limitations
 
 - PDF extraction works on text-based PDFs. For scanned/image PDFs, copy text to a .txt file.
+- LaTeX extraction strips common commands but may not fully resolve custom macros, \input{} chains, or nesting deeper than 3 levels. For complex templates, export to .txt first.
+- DOCX extraction reads text content only — images, tables with complex formatting, headers/footers, and text boxes may not be fully captured. For best results, use .txt.
 - Keyword matching is lexical — does not understand semantic similarity.
 - Results are a guide, not a guarantee. ATS systems vary widely.
 
