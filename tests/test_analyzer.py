@@ -286,5 +286,101 @@ class TestWordFrequency(unittest.TestCase):
         self.assertNotIn("the", freq)
 
 
+class TestTexExtraction(unittest.TestCase):
+    def test_extract_tex_file(self):
+        import tempfile
+
+        content = r"""\documentclass{article}
+\usepackage[utf8]{inputenc}
+\begin{document}
+\section{Skills}
+Python, Java, React, PostgreSQL
+\textbf{Docker} and \emph{Kubernetes}
+\end{document}"""
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".tex", delete=False, encoding="utf-8"
+        ) as f:
+            f.write(content)
+            tmp = f.name
+        try:
+            result = extract_text(tmp)
+            self.assertIn("Python", result)
+            self.assertIn("Docker", result)
+            self.assertIn("Kubernetes", result)
+            self.assertNotIn("\\documentclass", result)
+            self.assertNotIn("\\begin", result)
+            self.assertNotIn("\\usepackage", result)
+        finally:
+            os.unlink(tmp)
+
+    def test_strip_latex_preserves_content(self):
+        from ats_scanner.extractor import strip_latex
+
+        text = r"\textbf{Python} and \emph{Java} developer"
+        result = strip_latex(text)
+        self.assertIn("Python", result)
+        self.assertIn("Java", result)
+        self.assertIn("developer", result)
+        self.assertNotIn("\\textbf", result)
+        self.assertNotIn("\\emph", result)
+
+    def test_strip_latex_removes_comments(self):
+        from ats_scanner.extractor import strip_latex
+
+        text = "Python developer % this is a comment\nJava expert"
+        result = strip_latex(text)
+        self.assertIn("Python", result)
+        self.assertIn("Java", result)
+        self.assertNotIn("comment", result)
+
+    def test_strip_latex_handles_href(self):
+        from ats_scanner.extractor import strip_latex
+
+        text = r"\href{https://github.com/user}{My GitHub Profile}"
+        result = strip_latex(text)
+        self.assertIn("My GitHub Profile", result)
+        self.assertNotIn("https://", result)
+
+    def test_strip_latex_handles_sections(self):
+        from ats_scanner.extractor import strip_latex
+
+        text = r"\section{Experience}\subsection{Company A}"
+        result = strip_latex(text)
+        self.assertIn("Experience", result)
+        self.assertIn("Company A", result)
+
+    def test_strip_latex_removes_preamble(self):
+        from ats_scanner.extractor import strip_latex
+
+        text = r"""\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+Actual content here"""
+        result = strip_latex(text)
+        self.assertIn("Actual content", result)
+        self.assertNotIn("documentclass", result)
+        self.assertNotIn("geometry", result)
+
+    def test_strip_latex_escaped_chars(self):
+        from ats_scanner.extractor import strip_latex
+
+        text = r"R\&D department, 100\% effort"
+        result = strip_latex(text)
+        self.assertIn("R", result)
+        self.assertIn("D department", result)
+
+    def test_strip_latex_nested_commands(self):
+        from ats_scanner.extractor import strip_latex
+
+        text = r"\textbf{\emph{Python}} and \textit{\texttt{Java}} developer"
+        result = strip_latex(text)
+        self.assertIn("Python", result)
+        self.assertIn("Java", result)
+        self.assertIn("developer", result)
+        self.assertNotIn("\\textbf", result)
+        self.assertNotIn("\\emph", result)
+        self.assertNotIn("{", result)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -1,6 +1,6 @@
 """
 Text extraction utilities.
-Supports: .txt files, .pdf files (basic), raw text strings.
+Supports: .txt files, .pdf files (basic), .tex files (LaTeX), raw text strings.
 """
 
 import os
@@ -12,7 +12,7 @@ import zlib
 def extract_text(source: str) -> str:
     """
     Extract text from a file path or raw text string.
-    Supports .txt and .pdf files, or plain text input.
+    Supports .txt, .pdf, and .tex files, or plain text input.
     """
     if os.path.isfile(source):
         ext = os.path.splitext(source)[1].lower()
@@ -20,8 +20,10 @@ def extract_text(source: str) -> str:
             return _extract_pdf(source)
         elif ext == ".txt":
             return _extract_txt(source)
+        elif ext == ".tex":
+            return _extract_tex(source)
         else:
-            raise ValueError(f"Unsupported file type: {ext}. Use .txt or .pdf")
+            raise ValueError(f"Unsupported file type: {ext}. Use .txt, .pdf, or .tex")
     else:
         # Treat as raw text
         return source.strip()
@@ -70,7 +72,9 @@ def _extract_pdf(path: str) -> str:
             for m in tj_array.finditer(block):
                 for sm in str_in_array.finditer(m.group(1)):
                     try:
-                        text_parts.append(sm.group(1).decode("latin-1", errors="ignore"))
+                        text_parts.append(
+                            sm.group(1).decode("latin-1", errors="ignore")
+                        )
                     except Exception:
                         pass
 
@@ -82,7 +86,9 @@ def _extract_pdf(path: str) -> str:
         raw = re.sub(r"\s+", " ", raw).strip()
 
         if len(raw) < 50:
-            raise ValueError("PDF text extraction yielded too little text. Try saving as .txt first.")
+            raise ValueError(
+                "PDF text extraction yielded too little text. Try saving as .txt first."
+            )
 
         return raw
 
@@ -93,8 +99,58 @@ def _extract_pdf(path: str) -> str:
         )
 
 
+def _extract_tex(path: str) -> str:
+    raw = _extract_txt(path)
+    return strip_latex(raw)
+
+
+def strip_latex(text: str) -> str:
+    # Remove comments (% to end of line, but not escaped \%)
+    text = re.sub(r"(?<!\\)%.*", "", text)
+
+    # Remove \begin{...} and \end{...}
+    text = re.sub(r"\\(?:begin|end)\{[^}]*\}", "", text)
+
+    # Remove preamble commands and their arguments
+    text = re.sub(
+        r"\\(?:documentclass|usepackage|input|include|bibliography|bibliographystyle)"
+        r"(?:\[[^\]]*\])?\{[^}]*\}",
+        "",
+        text,
+    )
+
+    # Convert \item to newline (before generic command removal)
+    text = re.sub(r"\\item\s*", "\n", text)
+
+    # Multi-pass: peel nested formatting commands layer by layer
+    _fmt_re = re.compile(
+        r"\\(?:textbf|textit|emph|underline|texttt|textrm|textsf|textsc"
+        r"|section|subsection|subsubsection|paragraph|subparagraph"
+        r"|title|author|date)\*?\{([^}]*)\}"
+    )
+    for _ in range(3):
+        text, n = _fmt_re.subn(r"\1", text)
+        if n == 0:
+            break
+
+    # Handle \href{url}{text} -> text
+    text = re.sub(r"\\href\{[^}]*\}\{([^}]*)\}", r"\1", text)
+
+    # Remove remaining \command with optional [] and {} args
+    text = re.sub(r"\\[a-zA-Z]+\*?(?:\[[^\]]*\])?(?:\{[^}]*\})*", "", text)
+
+    # Replace escaped special characters with space
+    text = re.sub(r"\\[\\&%$#_{}~^]", " ", text)
+
+    # Clean up leftover braces, multiple spaces, blank lines
+    text = re.sub(r"[{}]", "", text)
+    text = re.sub(r"[ \t]+", " ", text)
+    text = re.sub(r"\n\s*\n+", "\n", text)
+
+    return text.strip()
+
+
 def clean_text(text: str) -> str:
-    """Normalize text for analysis."""
     text = text.lower()
     text = re.sub(r"[^\w\s\+#\./]", " ", text)
     text = re.sub(r"\s+", " ", text)

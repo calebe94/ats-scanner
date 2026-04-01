@@ -450,7 +450,7 @@ Include:
 • Skills section"></textarea>
         </div>
         <div id="resume-upload" style="display:none;">
-          <input type="file" id="resumeFile" accept=".txt,.pdf" onchange="handleFile('resume',this)">
+          <input type="file" id="resumeFile" accept=".txt,.pdf,.tex" onchange="handleFile('resume',this)">
           <div class="upload-zone" id="resumeDrop"
             onclick="document.getElementById('resumeFile').click()"
             ondragover="onDrag(event,true,'resumeDrop')"
@@ -458,7 +458,7 @@ Include:
             ondrop="onDrop(event,'resume')">
             <div class="uz-icon">📄</div>
             <div class="uz-text">Drop file or <strong>browse</strong></div>
-            <div class="uz-hint">.txt or .pdf supported</div>
+            <div class="uz-hint">.txt, .pdf, or .tex supported</div>
             <div class="uz-fname" id="resumeFName"></div>
           </div>
         </div>
@@ -484,7 +484,7 @@ Include everything:
 • Qualifications"></textarea>
         </div>
         <div id="jd-upload" style="display:none;">
-          <input type="file" id="jdFile" accept=".txt" onchange="handleFile('jd',this)">
+          <input type="file" id="jdFile" accept=".txt,.tex" onchange="handleFile('jd',this)">
           <div class="upload-zone" id="jdDrop"
             onclick="document.getElementById('jdFile').click()"
             ondragover="onDrag(event,true,'jdDrop')"
@@ -492,7 +492,7 @@ Include everything:
             ondrop="onDrop(event,'jd')">
             <div class="uz-icon">📋</div>
             <div class="uz-text">Drop file or <strong>browse</strong></div>
-            <div class="uz-hint">.txt files</div>
+            <div class="uz-hint">.txt or .tex files</div>
             <div class="uz-fname" id="jdFName"></div>
           </div>
         </div>
@@ -950,6 +950,26 @@ function switchTab(which, mode, btn){
   btn.classList.add('on');
 }
 
+function stripLatex(text){
+    text = text.replace(/(?<!\\)%.*/g, '');
+    text = text.replace(/\\(?:begin|end)\{[^}]*\}/g, '');
+    text = text.replace(/\\(?:documentclass|usepackage|input|include|bibliography|bibliographystyle)(?:\[[^\]]*\])?\{[^}]*\}/g, '');
+    text = text.replace(/\\item\s*/g, '\n');
+    const fmtRe = /\\(?:textbf|textit|emph|underline|texttt|textrm|textsf|textsc|section|subsection|subsubsection|paragraph|subparagraph|title|author|date)\*?\{([^}]*)\}/g;
+    for(let i=0;i<3;i++){
+        const next = text.replace(fmtRe, '$1');
+        if(next === text) break;
+        text = next;
+    }
+    text = text.replace(/\\href\{[^}]*\}\{([^}]*)\}/g, '$1');
+    text = text.replace(/\\[a-zA-Z]+\*?(?:\[[^\]]*\])?(?:\{[^}]*\})*/g, '');
+    text = text.replace(/\\[\\&%$#_{}~^]/g, ' ');
+    text = text.replace(/[{}]/g, '');
+    text = text.replace(/[ \t]+/g, ' ');
+    text = text.replace(/\n\s*\n+/g, '\n');
+    return text.trim();
+}
+
 function handleFile(which, input){
   const file=input.files[0]; if(!file) return;
   const nameEl=document.getElementById(`${which}FName`);
@@ -970,6 +990,13 @@ function handleFile(which, input){
       const text=parts.join(' ').replace(/\s+/g,' ').trim()||raw.replace(/[^\x20-\x7E\n]/g,' ').trim();
       if(which==='resume') resumeContent=text; else jdContent=text;
       nameEl.textContent='✓ '+file.name+(text.length<100?' (limited — try .txt)':'');
+    };
+  } else if(file.name.endsWith('.tex')){
+    reader.readAsText(file);
+    reader.onload=e=>{
+      const text = stripLatex(e.target.result);
+      if(which==='resume') resumeContent=text; else jdContent=text;
+      nameEl.textContent='✓ '+file.name;
     };
   } else {
     reader.readAsText(file);
