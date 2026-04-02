@@ -332,6 +332,28 @@ def print_report(
             p(tl)
         p()
 
+    # ── YEARS OF EXPERIENCE ──
+    yoe_reqs = result.get("yoe_requirements", [])
+    resume_yoe = result.get("resume_yoe", {})
+    if yoe_reqs:
+        p(section_line())
+        p(f"  {bold('YEARS OF EXPERIENCE CHECK')}")
+        p(section_line())
+        p()
+        if resume_yoe.get("has_dates"):
+            p(f"  {label('Estimated YoE:')}  {col(f'~{resume_yoe[\"total_years\"]} years', C.BRIGHT_WHITE)}")
+        else:
+            p(f"  {label('Estimated YoE:')}  {col('Could not detect date ranges', C.BRIGHT_YELLOW)}")
+        p()
+        for req in yoe_reqs:
+            skill_str = f" of {req['skill']}" if req.get("skill") else ""
+            req_str = f"{req['years']}+ years{skill_str}"
+            if resume_yoe.get("has_dates") and resume_yoe["total_years"] >= req["years"]:
+                p(f"    {col('PASS', C.BRIGHT_GREEN)}  {req_str}")
+            else:
+                p(f"    {col('WARN', C.BRIGHT_YELLOW)}  {req_str}")
+        p()
+
     # ── RESUME SECTIONS ──
     p(section_line())
     p(f"  {bold('RESUME SECTION CHECK')}")

@@ -6,6 +6,7 @@ Extracts, weights, and matches keywords between resume and job description.
 import math
 import re
 from collections import Counter
+from datetime import datetime
 from typing import Dict, List, Tuple, Set
 
 
@@ -712,6 +713,92 @@ def extract_ngrams_weighted(text: str, max_n: int = 4) -> Counter:
     return ngram_counts
 
 
+# ── YEARS OF EXPERIENCE DETECTION ─────────────────────────────────────────────
+
+YOE_PATTERN = re.compile(
+    r"(\d+)\+?\s*(?:[-–]?\s*\d+)?\s*"
+    r"(?:years?|yrs?)\s*"
+    r"(?:of\s+)?(?:experience|exp\.?|professional)?"
+    r"(?:\s+(?:with|in|using|of)\s+(.+?))?(?:\.|,|;|\n|$)",
+    re.IGNORECASE,
+)
+
+DATE_RANGE_PATTERN = re.compile(
+    r"(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*"
+    r"(\d{4}))\s*(?:[-–—]|to)\s*"
+    r"(?:(present|current|now)|"
+    r"(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*"
+    r"(\d{4}))",
+    re.IGNORECASE,
+)
+
+YEAR_RANGE_PATTERN = re.compile(
+    r"(\d{4})\s*(?:[-–—]|to)\s*(present|current|now|\d{4})",
+    re.IGNORECASE,
+)
+
+
+def extract_yoe_requirements(jd_text: str) -> List[Dict]:
+    """Extract years-of-experience requirements from job description."""
+    requirements = []
+    for match in YOE_PATTERN.finditer(jd_text):
+        years = int(match.group(1))
+        skill = match.group(2)
+        if skill:
+            skill = skill.strip().rstrip(".,;")
+        requirements.append({"years": years, "skill": skill})
+    return requirements
+
+
+def estimate_resume_yoe(resume_text: str, current_year: int = None) -> Dict:
+    """
+    Estimate total years of experience from resume date ranges.
+    Merges overlapping ranges to avoid double-counting.
+    """
+    if current_year is None:
+        current_year = datetime.now().year
+    ranges = []
+
+    for match in DATE_RANGE_PATTERN.finditer(resume_text):
+        start_year = int(match.group(1))
+        if match.group(2):
+            end_year = current_year
+        else:
+            end_year = int(match.group(3))
+        if 1970 <= start_year <= current_year + 1 and start_year <= end_year:
+            ranges.append((start_year, end_year))
+
+    if not ranges:
+        for match in YEAR_RANGE_PATTERN.finditer(resume_text):
+            start_year = int(match.group(1))
+            end_str = match.group(2).lower()
+            if end_str in ("present", "current", "now"):
+                end_year = current_year
+            else:
+                end_year = int(end_str)
+            if 1970 <= start_year <= current_year + 1 and start_year <= end_year:
+                ranges.append((start_year, end_year))
+
+    if not ranges:
+        return {"total_years": 0, "date_ranges": [], "has_dates": False}
+
+    ranges.sort()
+    merged = [ranges[0]]
+    for start, end in ranges[1:]:
+        if start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+
+    total = sum(end - start for start, end in merged)
+
+    return {
+        "total_years": total,
+        "date_ranges": merged,
+        "has_dates": True,
+    }
+
+
 # ── SECTION-AWARE SCORING ─────────────────────────────────────────────────────
 
 SECTION_MULTIPLIERS = {
@@ -937,6 +1024,8 @@ def compute_match(resume_text: str, jd_text: str) -> Dict:
         "dynamic_matched": dynamic_matched,
         "dynamic_missing": dynamic_missing,
         "keyword_placement": keyword_placement,
+        "yoe_requirements": extract_yoe_requirements(jd_text),
+        "resume_yoe": estimate_resume_yoe(resume_text),
     }
 
 

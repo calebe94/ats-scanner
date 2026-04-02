@@ -16,6 +16,8 @@ from ats_scanner.analyzer import (
     bm25_similarity,
     extract_ngrams_weighted,
     segment_resume,
+    extract_yoe_requirements,
+    estimate_resume_yoe,
     _score_to_grade,
     _analyze_sections,
     get_word_frequencies,
@@ -661,6 +663,46 @@ class TestDynamicKeywordExtraction(unittest.TestCase):
         self.assertIn("dynamic_jd_keywords", result)
         self.assertIn("dynamic_matched", result)
         self.assertIn("dynamic_missing", result)
+
+
+class TestYoEDetection(unittest.TestCase):
+    def test_extract_yoe_simple(self):
+        jd = "Requires 5+ years of Python experience"
+        reqs = extract_yoe_requirements(jd)
+        self.assertEqual(len(reqs), 1)
+        self.assertEqual(reqs[0]["years"], 5)
+
+    def test_extract_yoe_with_skill(self):
+        jd = "3 years experience with React"
+        reqs = extract_yoe_requirements(jd)
+        self.assertEqual(reqs[0]["years"], 3)
+        self.assertIn("react", reqs[0]["skill"].lower())
+
+    def test_estimate_resume_yoe(self):
+        resume = (
+            "Software Developer\nJan 2020 - Present\nJunior Dev\nJun 2018 - Dec 2019"
+        )
+        yoe = estimate_resume_yoe(resume, current_year=2026)
+        self.assertTrue(yoe["has_dates"])
+        self.assertGreaterEqual(yoe["total_years"], 7)
+
+    def test_overlapping_ranges_merged(self):
+        resume = "Role A: 2018 - 2022\nRole B: 2020 - 2024"
+        yoe = estimate_resume_yoe(resume, current_year=2026)
+        self.assertEqual(yoe["total_years"], 6)
+
+    def test_no_dates_returns_zero(self):
+        resume = "Python developer with extensive experience"
+        yoe = estimate_resume_yoe(resume)
+        self.assertFalse(yoe["has_dates"])
+        self.assertEqual(yoe["total_years"], 0)
+
+    def test_yoe_in_result(self):
+        resume = "python developer\nJan 2020 - Present"
+        jd = "5+ years of python experience"
+        result = compute_match(resume, jd)
+        self.assertIn("yoe_requirements", result)
+        self.assertIn("resume_yoe", result)
 
 
 class TestSynonymExpansion(unittest.TestCase):
