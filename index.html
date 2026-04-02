@@ -691,28 +691,28 @@ hr{border:none;border-top:1px dashed var(--muted);margin:2rem auto;}
 const TAXONOMY = {
   languages: {
     weight:10, icon:'💻', label:'Languages',
-    kws:['python','java','javascript','typescript','c++','c#','c','golang','go','rust',
+    kws:['python','java','javascript','typescript','c++','c#','c','go','rust',
          'kotlin','swift','ruby','php','scala','r','matlab','perl','bash','shell',
          'powershell','sql','html','css','sass','less','dart']
   },
   frameworks: {
     weight:9, icon:'⚙️', label:'Frameworks & Libraries',
-    kws:['react','angular','vue','next.js','nextjs','nuxt','svelte','node.js','nodejs',
+    kws:['react','angular','vue','next.js','nuxt','svelte','node.js',
          'express','fastapi','flask','django','spring','spring boot','hibernate','rails',
-         'laravel','asp.net','.net','dotnet','tensorflow','pytorch','keras','pandas','numpy',
-         'scikit-learn','sklearn','matplotlib','junit','pytest','jest','mocha','cypress',
+         'laravel','asp.net','.net','tensorflow','pytorch','keras','pandas','numpy',
+         'scikit-learn','matplotlib','junit','pytest','jest','mocha','cypress',
          'selenium','graphql','rest','grpc','material-ui','tailwind','bootstrap',
          'jquery','redux']
   },
   databases: {
     weight:8, icon:'🗄️', label:'Databases',
-    kws:['postgresql','postgres','mysql','sqlite','mongodb','redis','elasticsearch',
-         'cassandra','dynamodb','oracle','sql server','mssql','mariadb','firebase',
+    kws:['postgresql','mysql','sqlite','mongodb','redis','elasticsearch',
+         'cassandra','dynamodb','oracle','sql server','mariadb','firebase',
          'supabase','nosql','influxdb','neo4j']
   },
   devops_cloud: {
     weight:8, icon:'☁️', label:'DevOps & Cloud',
-    kws:['docker','kubernetes','k8s','aws','azure','gcp','google cloud','terraform',
+    kws:['docker','kubernetes','aws','azure','gcp','terraform',
          'ansible','jenkins','github actions','gitlab ci','circleci','travis','ci/cd',
          'devops','linux','unix','nginx','apache','microservices','serverless',
          'lambda','s3','ec2','rds','cloudformation','helm']
@@ -725,9 +725,9 @@ const TAXONOMY = {
   },
   concepts: {
     weight:7, icon:'🧠', label:'Concepts & Practices',
-    kws:['agile','scrum','kanban','tdd','bdd','oop','object oriented','functional programming',
+    kws:['agile','scrum','kanban','tdd','bdd','oop','functional programming',
          'data structures','algorithms','design patterns','solid','mvc','mvvm','api',
-         'rest api','restful','websocket','authentication','authorization','oauth','jwt',
+         'rest api','websocket','authentication','authorization','oauth','jwt',
          'machine learning','deep learning','nlp','computer vision','data science',
          'big data','etl','data pipeline','unit testing','integration testing','test driven',
          'code review','debugging','performance optimization','security','encryption',
@@ -750,11 +750,14 @@ const TAXONOMY = {
 
 const STOP = new Set(['the','a','an','and','or','but','in','on','at','to','for','of',
   'with','by','from','is','are','was','were','be','been','have','has','had','do','does',
-  'did','will','would','could','should','may','might','can','about','this','that','these',
-  'those','we','you','they','all','any','some','not','more','most','other','into','each',
-  'so','than','too','very','just','also','both','only','then','when','where','who',
-  'experience','work','years','year','new','using','use','used','including','skills','strong',
-  'good','knowledge','understanding','role','team','ability','help','must','need','required']);
+  'did','will','would','could','should','may','might','shall','can','need','must',
+  'about','this','that','these','those','we','you','they','he','she','our','your','their',
+  'its','my','all','any','some','no','not','more','most','other','such','into','through',
+  'during','before','after','above','below','between','each','few','so','than','too',
+  'very','just','also','both','only','own','same','then','when','where','who','which',
+  'how','what','why','experience','work','working','years','year','new','using','use',
+  'used','including','include','ability','skills','strong','good','great','excellent',
+  'knowledge','understanding','familiar']);
 
 const SECTION_ICONS = {contact:'📧',education:'🎓',experience:'💼',projects:'🚀',skills:'⚡',summary:'📝'};
 

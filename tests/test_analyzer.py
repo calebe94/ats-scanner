@@ -99,7 +99,7 @@ class TestTaxonomyIntegrity(unittest.TestCase):
 
     def test_taxonomy_keyword_count(self):
         total = sum(len(d["keywords"]) for d in SKILL_TAXONOMY.values())
-        self.assertGreaterEqual(total, 209)
+        self.assertGreaterEqual(total, 198)  # reduced from 209 by alias cleanup
 
 
 class TestComputeMatch(unittest.TestCase):
