@@ -823,6 +823,53 @@ function getNgrams(text, n=2){
   return ng;
 }
 
+function bm25Score(queryTerms, docFreq, docLength, avgDocLength, corpusSize, docContaining, k1=1.5, b=0.75){
+  let score=0;
+  for(const term of queryTerms){
+    const tf=docFreq.get(term)||0;
+    const nContaining=docContaining.get(term)||0;
+    const idf=Math.log((corpusSize-nContaining+0.5)/(nContaining+0.5)+1);
+    if(avgDocLength>0){
+      const num=tf*(k1+1);
+      const den=tf+k1*(1-b+b*(docLength/avgDocLength));
+      score+=idf*(num/den);
+    }
+  }
+  return score;
+}
+
+function bm25Similarity(textA, textB){
+  const wA=getWords(textA), wB=getWords(textB);
+  if(!wA.length&&!wB.length) return 1;
+  if(!wA.length||!wB.length) return 0;
+  const freqA=new Map(), freqB=new Map();
+  wA.forEach(w=>freqA.set(w,(freqA.get(w)||0)+1));
+  wB.forEach(w=>freqB.set(w,(freqB.get(w)||0)+1));
+  const allW=new Set([...freqA.keys(),...freqB.keys()]);
+  const lenA=wA.length, lenB=wB.length, avgLen=(lenA+lenB)/2;
+  const docContaining=new Map();
+  for(const w of allW){
+    let c=0; if(freqA.has(w))c++; if(freqB.has(w))c++;
+    docContaining.set(w,c);
+  }
+  const qTerms=[...freqB.keys()];
+  const actual=bm25Score(qTerms,freqA,lenA,avgLen,2,docContaining);
+  const maxS=bm25Score(qTerms,freqB,lenB,avgLen,2,docContaining);
+  if(maxS<=0) return 0;
+  return Math.min(1,actual/maxS);
+}
+
+function getNgramsWeighted(text, maxN=4){
+  const w=getWords(text), counts=new Map();
+  for(let n=2;n<=maxN;n++){
+    for(let i=0;i<w.length-n+1;i++){
+      const ng=w.slice(i,i+n).join(' ');
+      counts.set(ng,(counts.get(ng)||0)+1);
+    }
+  }
+  return counts;
+}
+
 function jaccardSimilarity(textA, textB){
   const wordsA = new Set(getWords(textA));
   const wordsB = new Set(getWords(textB));
@@ -886,7 +933,7 @@ function analyze(resumeText, jdText){
     score = 0;
   } else {
     const keywordScore = totalW>0?(matchW/totalW)*100:0;
-    const textScore = jaccardSimilarity(rc, jc) * 100;
+    const textScore = bm25Similarity(rc, jc) * 100;
     if(totalW > 0){
       score = (0.75 * keywordScore) + (0.25 * textScore);
     } else {
@@ -905,11 +952,14 @@ function analyze(resumeText, jdText){
     if(x.length) missingByCat[cat]=x;
   }
 
-  // Missing phrases
-  const jNg=new Set(getNgrams(jc)), rNg=new Set(getNgrams(rc));
-  const missingPhrases=[...jNg]
+  const jNg=getNgramsWeighted(jc,4), rNg=getNgramsWeighted(rc,4);
+  const missingPhrases=[...jNg.keys()]
     .filter(p=>!rNg.has(p)&&!p.split(' ').some(w=>STOP.has(w)))
-    .sort((a,b)=>(jc.match(new RegExp(b,'g'))||[]).length-(jc.match(new RegExp(a,'g'))||[]).length)
+    .sort((a,b)=>{
+      const la=a.split(' ').length, lb=b.split(' ').length;
+      if(lb!==la) return lb-la;
+      return (jNg.get(b)||0)-(jNg.get(a)||0);
+    })
     .slice(0,10);
 
   const bonusSkills=[...rFlat].filter(k=>!jFlat.has(k)).sort().slice(0,15);

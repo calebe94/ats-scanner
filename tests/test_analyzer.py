@@ -13,6 +13,8 @@ from ats_scanner.analyzer import (
     extract_keywords,
     compute_match,
     normalize_text,
+    bm25_similarity,
+    extract_ngrams_weighted,
     _score_to_grade,
     _analyze_sections,
     get_word_frequencies,
@@ -545,6 +547,51 @@ class TestIdenticalTextScoring(unittest.TestCase):
     def test_both_empty_scores_zero(self):
         result = compute_match("", "")
         self.assertEqual(result["score"], 0)
+
+
+class TestBM25(unittest.TestCase):
+    def test_identical_text_scores_high(self):
+        score = bm25_similarity(
+            "python developer react docker", "python developer react docker"
+        )
+        self.assertGreater(score, 0.95)
+
+    def test_no_overlap_scores_zero(self):
+        score = bm25_similarity("python java react", "marketing sales finance")
+        self.assertAlmostEqual(score, 0.0)
+
+    def test_partial_overlap(self):
+        score = bm25_similarity(
+            "python java react docker aws", "python react angular vue"
+        )
+        self.assertGreater(score, 0.1)
+        self.assertLess(score, 0.9)
+
+    def test_keyword_repetition_saturates(self):
+        score_1x = bm25_similarity("python developer", "python developer")
+        score_5x = bm25_similarity(
+            "python python python python python developer",
+            "python developer",
+        )
+        self.assertLess(score_5x / max(score_1x, 0.001), 2.0)
+
+    def test_empty_texts(self):
+        self.assertAlmostEqual(bm25_similarity("", ""), 1.0)
+        self.assertAlmostEqual(bm25_similarity("python", ""), 0.0)
+        self.assertAlmostEqual(bm25_similarity("", "python"), 0.0)
+
+
+class TestEnhancedNgrams(unittest.TestCase):
+    def test_trigrams_extracted(self):
+        text = "machine learning engineer with deep learning experience"
+        ngrams = extract_ngrams_weighted(text, max_n=3)
+        self.assertIn("machine learning engineer", ngrams)
+
+    def test_4grams_extracted(self):
+        text = "continuous integration continuous deployment pipeline setup"
+        ngrams = extract_ngrams_weighted(text, max_n=4)
+        four_grams = [k for k in ngrams if len(k.split()) == 4]
+        self.assertGreater(len(four_grams), 0)
 
 
 class TestDynamicKeywordExtraction(unittest.TestCase):

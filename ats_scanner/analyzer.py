@@ -3,6 +3,7 @@ Keyword analysis engine.
 Extracts, weights, and matches keywords between resume and job description.
 """
 
+import math
 import re
 from collections import Counter
 from typing import Dict, List, Tuple, Set
@@ -607,6 +608,110 @@ def jaccard_similarity(text_a: str, text_b: str) -> float:
     return len(intersection) / len(union)
 
 
+def bm25_score(
+    query_terms: List[str],
+    doc_freq: Counter,
+    doc_length: int,
+    avg_doc_length: float,
+    corpus_size: int = 2,
+    doc_containing: Dict[str, int] = None,
+    k1: float = 1.5,
+    b: float = 0.75,
+) -> float:
+    """
+    BM25 relevance score for a document against query terms.
+    Uses IDF with smoothing, term frequency saturation, and length normalization.
+    """
+    if doc_containing is None:
+        doc_containing = {}
+
+    score = 0.0
+    for term in query_terms:
+        tf = doc_freq.get(term, 0)
+        n_containing = doc_containing.get(term, 0)
+
+        idf = math.log((corpus_size - n_containing + 0.5) / (n_containing + 0.5) + 1)
+
+        if avg_doc_length > 0:
+            numerator = tf * (k1 + 1)
+            denominator = tf + k1 * (1 - b + b * (doc_length / avg_doc_length))
+            score += idf * (numerator / denominator)
+
+    return score
+
+
+def bm25_similarity(text_a: str, text_b: str) -> float:
+    """
+    Normalized BM25 similarity between two texts (0.0-1.0).
+    Uses text_b as query (JD) and text_a as document (resume).
+    Normalizes by self-score (document scored against itself).
+    """
+    freq_a = get_word_frequencies(text_a)
+    freq_b = get_word_frequencies(text_b)
+
+    if not freq_a or not freq_b:
+        if not freq_a and not freq_b:
+            return 1.0
+        return 0.0
+
+    words_a = set(freq_a.keys())
+    words_b = set(freq_b.keys())
+    all_words = words_a | words_b
+
+    len_a = sum(freq_a.values())
+    len_b = sum(freq_b.values())
+    avg_len = (len_a + len_b) / 2
+
+    doc_containing = {}
+    for w in all_words:
+        count = 0
+        if w in words_a:
+            count += 1
+        if w in words_b:
+            count += 1
+        doc_containing[w] = count
+
+    query_terms = list(freq_b.keys())
+
+    actual = bm25_score(
+        query_terms,
+        freq_a,
+        len_a,
+        avg_len,
+        corpus_size=2,
+        doc_containing=doc_containing,
+    )
+
+    max_score = bm25_score(
+        query_terms,
+        freq_b,
+        len_b,
+        avg_len,
+        corpus_size=2,
+        doc_containing=doc_containing,
+    )
+
+    if max_score <= 0:
+        return 0.0
+
+    return min(1.0, actual / max_score)
+
+
+def extract_ngrams_weighted(text: str, max_n: int = 4) -> Counter:
+    """Extract n-grams (n=2 to max_n) with frequency counts."""
+    words = [
+        w
+        for w in re.findall(r"\b[a-z][a-z0-9\+#\.]*\b", text.lower())
+        if w not in STOP_WORDS and len(w) > 2
+    ]
+    ngram_counts = Counter()
+    for n in range(2, max_n + 1):
+        for i in range(len(words) - n + 1):
+            ngram = " ".join(words[i : i + n])
+            ngram_counts[ngram] += 1
+    return ngram_counts
+
+
 def compute_match(resume_text: str, jd_text: str) -> Dict:
     """
     Core matching algorithm.
@@ -652,7 +757,7 @@ def compute_match(resume_text: str, jd_text: str) -> Dict:
         final_score = 0.0
         text_score = 0.0
     else:
-        text_score = jaccard_similarity(resume_lower, jd_lower) * 100
+        text_score = bm25_similarity(resume_lower, jd_lower) * 100
 
         if total_weight > 0:
             final_score = (0.75 * weighted_score) + (0.25 * text_score)
@@ -675,16 +780,16 @@ def compute_match(resume_text: str, jd_text: str) -> Dict:
         if cat_missing:
             missing_by_cat[category] = cat_missing
 
-    # Extract key phrases from JD not in resume
-    jd_ngrams = set(extract_ngrams(jd_lower))
-    resume_ngrams = set(extract_ngrams(resume_lower))
+    # Extract key phrases from JD not in resume (enhanced: 2-4 grams)
+    jd_ngrams = extract_ngrams_weighted(jd_lower, max_n=4)
+    resume_ngrams = extract_ngrams_weighted(resume_lower, max_n=4)
     missing_phrases = sorted(
         [
             p
-            for p in jd_ngrams - resume_ngrams
-            if not any(sw in p.split() for sw in STOP_WORDS)
+            for p in jd_ngrams
+            if p not in resume_ngrams and not any(sw in p.split() for sw in STOP_WORDS)
         ],
-        key=lambda x: jd_lower.count(x),
+        key=lambda x: (len(x.split()), jd_ngrams[x]),
         reverse=True,
     )[:10]
 
