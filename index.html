@@ -944,6 +944,11 @@ function analyze(resumeText, jdText){
   const matched = new Set([...jFlat].filter(k=>rFlat.has(k)));
   const missing = new Set([...jFlat].filter(k=>!rFlat.has(k)));
 
+  const allTaxKws=new Set(Object.values(TAXONOMY).flatMap(d=>d.kws));
+  const dynamicJdKws=extractDynamicKeywords(jdText, allTaxKws);
+  const dynamicMatched=dynamicJdKws.filter(k=>new RegExp('\\b'+k.replace(/[+.]/g,'\\$&')+'\\b','i').test(rc));
+  const dynamicMissing=dynamicJdKws.filter(k=>!dynamicMatched.includes(k));
+
   const resumeSections=segmentResume(rc);
   let totalW=0, matchW=0;
   const kwPlacement={};
@@ -1007,11 +1012,6 @@ function analyze(resumeText, jdText){
     .slice(0,10);
 
   const bonusSkills=[...rFlat].filter(k=>!jFlat.has(k)).sort().slice(0,15);
-
-  const allTaxKws=new Set(Object.values(TAXONOMY).flatMap(d=>d.kws));
-  const dynamicJdKws=extractDynamicKeywords(jdText, allTaxKws);
-  const dynamicMatched=dynamicJdKws.filter(k=>new RegExp('\\b'+k.replace(/[+.]/g,'\\$&')+'\\b','i').test(rc));
-  const dynamicMissing=dynamicJdKws.filter(k=>!dynamicMatched.includes(k));
 
   const sections={
     contact:    /email|phone|@|\d{3}/.test(rc),
