@@ -973,8 +973,13 @@ function analyze(resumeText, jdText){
   } else {
     const keywordScore = totalW>0?Math.min(100,(matchW/totalW)*100):0;
     const textScore = bm25Similarity(rc, jc) * 100;
+    const dynScore = dynamicJdKws.length ? (dynamicMatched.length/dynamicJdKws.length)*100 : 0;
     if(totalW > 0){
-      score = (0.75 * keywordScore) + (0.25 * textScore);
+      if(dynamicJdKws.length){
+        score = (0.70 * keywordScore) + (0.20 * textScore) + (0.10 * dynScore);
+      } else {
+        score = (0.80 * keywordScore) + (0.20 * textScore);
+      }
     } else {
       score = textScore;
     }

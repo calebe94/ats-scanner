@@ -831,15 +831,41 @@ def compute_match(resume_text: str, jd_text: str) -> Dict:
     else:
         weighted_score = 0
 
-    # Guard: both texts empty → score 0 (not 100 via Jaccard edge case)
     if not resume_lower.strip() and not jd_lower.strip():
         final_score = 0.0
         text_score = 0.0
+        dynamic_score = 0.0
     else:
+        keyword_score = weighted_score
         text_score = bm25_similarity(resume_lower, jd_lower) * 100
 
+        all_taxonomy_kws = {
+            kw for cat in SKILL_TAXONOMY.values() for kw in cat["keywords"]
+        }
+        dynamic_jd_keywords_early = extract_dynamic_keywords(jd_text, all_taxonomy_kws)
+        dynamic_matched_early = [
+            kw
+            for kw in dynamic_jd_keywords_early
+            if re.search(r"\b" + re.escape(kw) + r"\b", resume_lower)
+        ]
+
+        if dynamic_jd_keywords_early:
+            dynamic_score = (
+                len(dynamic_matched_early) / len(dynamic_jd_keywords_early)
+            ) * 100
+        else:
+            dynamic_score = 0.0
+
+        # Combined formula: 70% taxonomy + 20% BM25 + 10% dynamic (or 80/20 if no dynamic)
         if total_weight > 0:
-            final_score = (0.75 * weighted_score) + (0.25 * text_score)
+            if dynamic_jd_keywords_early:
+                final_score = (
+                    (0.70 * keyword_score)
+                    + (0.20 * text_score)
+                    + (0.10 * dynamic_score)
+                )
+            else:
+                final_score = (0.80 * keyword_score) + (0.20 * text_score)
         else:
             final_score = text_score
 
