@@ -735,7 +735,7 @@ const TAXONOMY = {
   },
   soft_skills: {
     weight:4, icon:'🤝', label:'Soft Skills',
-    kws:['communication','teamwork','collaboration','leadership','problem solving',
+    kws:['communication','teamwork','collaboration','leadership',
          'problem-solving','analytical','detail oriented','fast learner','self motivated',
          'adaptable','creative','critical thinking','time management','multitasking',
          'initiative','proactive','organized','attention to detail']
@@ -758,6 +758,38 @@ const STOP = new Set(['the','a','an','and','or','but','in','on','at','to','for',
   'how','what','why','experience','work','working','years','year','new','using','use',
   'used','including','include','ability','skills','strong','good','great','excellent',
   'knowledge','understanding','familiar']);
+
+const SYNONYM_MAP = {
+  'js':'javascript','es6':'javascript','es7':'javascript','ts':'typescript',
+  'golang':'go','c sharp':'c#','csharp':'c#','cplusplus':'c++','py':'python','rb':'ruby',
+  'nextjs':'next.js','nodejs':'node.js','node':'node.js','expressjs':'express',
+  'express.js':'express','aspnet':'asp.net','asp.net core':'asp.net','dotnet':'.net',
+  'dot net':'.net','scikit learn':'scikit-learn','sklearn':'scikit-learn','tf':'tensorflow',
+  'material ui':'material-ui','mui':'material-ui','tailwindcss':'tailwind','tailwind css':'tailwind',
+  'postgres':'postgresql','pg':'postgresql','mongo':'mongodb','elastic':'elasticsearch',
+  'dynamo':'dynamodb','ms sql':'sql server','mssql':'sql server','maria':'mariadb',
+  'k8s':'kubernetes','kube':'kubernetes','amazon web services':'aws',
+  'google cloud platform':'gcp','google cloud':'gcp','microsoft azure':'azure',
+  'gh actions':'github actions','github ci':'github actions','gitlab cicd':'gitlab ci',
+  'ci cd':'ci/cd','cicd':'ci/cd','continuous integration':'ci/cd','continuous deployment':'ci/cd',
+  'visual studio code':'vs code','vscode':'vs code',
+  'object oriented programming':'oop','object-oriented':'oop','object oriented':'oop',
+  'test driven development':'tdd','test-driven development':'tdd',
+  'behavior driven development':'bdd','behavior-driven development':'bdd',
+  'representational state transfer':'rest','restful api':'rest api','restful':'rest api',
+  'json web token':'jwt','json web tokens':'jwt','natural language processing':'nlp',
+  'ml':'machine learning','dl':'deep learning','cv':'computer vision','ds':'data science',
+  'problem solving':'problem-solving','detail-oriented':'detail oriented','self-motivated':'self motivated'
+};
+const SORTED_SYNONYMS = Object.entries(SYNONYM_MAP).sort((a,b)=>b[0].length-a[0].length);
+function normalizeText(text){
+  let r=text;
+  for(const [alias,canonical] of SORTED_SYNONYMS){
+    const pat=new RegExp('\\b'+alias.replace(/[+.]/g,'\\$&').replace(/\//g,'\\/')+'\\b','gi');
+    r=r.replace(pat,canonical);
+  }
+  return r;
+}
 
 const SECTION_ICONS = {contact:'📧',education:'🎓',experience:'💼',projects:'🚀',skills:'⚡',summary:'📝'};
 
@@ -802,7 +834,7 @@ function jaccardSimilarity(textA, textB){
 }
 
 function analyze(resumeText, jdText){
-  const rc = clean(resumeText), jc = clean(jdText);
+  const rc = normalizeText(clean(resumeText)), jc = normalizeText(clean(jdText));
   const rKws = extractKws(rc), jKws = extractKws(jc);
   const rFlat = new Set(Object.values(rKws).flat());
   const jFlat = new Set(Object.values(jKws).flat());

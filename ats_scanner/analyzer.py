@@ -16,6 +16,105 @@ SPECIAL_PATTERNS = {
     "c#": r"\bc#",
 }
 
+# ── SYNONYM / ALIAS MAP ──────────────────────────────────────────────────────
+# Maps alternative names to their canonical form in SKILL_TAXONOMY.
+# Aliases here must NOT also appear in SKILL_TAXONOMY (cleaned up in Step 0).
+SYNONYM_MAP = {
+    # Languages
+    "js": "javascript",
+    "es6": "javascript",
+    "es7": "javascript",
+    "ts": "typescript",
+    "golang": "go",
+    "c sharp": "c#",
+    "csharp": "c#",
+    "cplusplus": "c++",
+    "py": "python",
+    "rb": "ruby",
+    # Frameworks
+    "nextjs": "next.js",
+    "nodejs": "node.js",
+    "node": "node.js",
+    "expressjs": "express",
+    "express.js": "express",
+    "aspnet": "asp.net",
+    "asp.net core": "asp.net",
+    "dotnet": ".net",
+    "dot net": ".net",
+    "scikit learn": "scikit-learn",
+    "sklearn": "scikit-learn",
+    "tf": "tensorflow",
+    "material ui": "material-ui",
+    "mui": "material-ui",
+    "tailwindcss": "tailwind",
+    "tailwind css": "tailwind",
+    # Databases
+    "postgres": "postgresql",
+    "pg": "postgresql",
+    "mongo": "mongodb",
+    "elastic": "elasticsearch",
+    "dynamo": "dynamodb",
+    "ms sql": "sql server",
+    "mssql": "sql server",
+    "maria": "mariadb",
+    # DevOps & Cloud
+    "k8s": "kubernetes",
+    "kube": "kubernetes",
+    "amazon web services": "aws",
+    "google cloud platform": "gcp",
+    "google cloud": "gcp",
+    "microsoft azure": "azure",
+    "gh actions": "github actions",
+    "github ci": "github actions",
+    "gitlab cicd": "gitlab ci",
+    "ci cd": "ci/cd",
+    "cicd": "ci/cd",
+    "continuous integration": "ci/cd",
+    "continuous deployment": "ci/cd",
+    # Tools
+    "visual studio code": "vs code",
+    "vscode": "vs code",
+    # Concepts
+    "object oriented programming": "oop",
+    "object-oriented": "oop",
+    "object oriented": "oop",
+    "test driven development": "tdd",
+    "test-driven development": "tdd",
+    "behavior driven development": "bdd",
+    "behavior-driven development": "bdd",
+    "representational state transfer": "rest",
+    "restful api": "rest api",
+    "restful": "rest api",
+    "json web token": "jwt",
+    "json web tokens": "jwt",
+    "natural language processing": "nlp",
+    "ml": "machine learning",
+    "dl": "deep learning",
+    "cv": "computer vision",
+    "ds": "data science",
+    # Soft Skills
+    "problem solving": "problem-solving",
+    "detail-oriented": "detail oriented",
+    "self-motivated": "self motivated",
+}
+
+# Pre-sorted by alias length descending so multi-word aliases are replaced first
+_SORTED_SYNONYMS = sorted(SYNONYM_MAP.items(), key=lambda x: -len(x[0]))
+
+
+def normalize_text(text: str) -> str:
+    """
+    Replace known synonyms/aliases with their canonical taxonomy form.
+    Expects already-lowercased input. Processes longer aliases first
+    to avoid partial replacements (e.g., 'amazon web services' before 'aws').
+    """
+    result = text
+    for alias, canonical in _SORTED_SYNONYMS:
+        pattern = r"\b" + re.escape(alias) + r"\b"
+        result = re.sub(pattern, canonical, result)
+    return result
+
+
 # ── KEYWORD TAXONOMY ──────────────────────────────────────────────────────────
 # Weighted skill categories. Higher weight = more important for ATS matching.
 
@@ -222,7 +321,6 @@ SKILL_TAXONOMY = {
             "teamwork",
             "collaboration",
             "leadership",
-            "problem solving",
             "problem-solving",
             "analytical",
             "detail oriented",
@@ -439,8 +537,8 @@ def compute_match(resume_text: str, jd_text: str) -> Dict:
     Core matching algorithm.
     Returns comprehensive match analysis.
     """
-    resume_lower = resume_text.lower()
-    jd_lower = jd_text.lower()
+    resume_lower = normalize_text(resume_text.lower())
+    jd_lower = normalize_text(jd_text.lower())
 
     # Extract keywords from both
     jd_keywords = extract_keywords(jd_lower)

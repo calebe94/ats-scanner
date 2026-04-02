@@ -12,12 +12,14 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from ats_scanner.analyzer import (
     extract_keywords,
     compute_match,
+    normalize_text,
     _score_to_grade,
     _analyze_sections,
     get_word_frequencies,
     extract_ngrams,
     jaccard_similarity,
     SKILL_TAXONOMY,
+    SYNONYM_MAP,
     STOP_WORDS,
 )
 from ats_scanner.extractor import clean_text, extract_text
@@ -99,7 +101,16 @@ class TestTaxonomyIntegrity(unittest.TestCase):
 
     def test_taxonomy_keyword_count(self):
         total = sum(len(d["keywords"]) for d in SKILL_TAXONOMY.values())
-        self.assertGreaterEqual(total, 198)  # reduced from 209 by alias cleanup
+        self.assertGreaterEqual(total, 197)
+
+    def test_no_alias_duplicates_in_taxonomy(self):
+        all_kws = {kw for cat in SKILL_TAXONOMY.values() for kw in cat["keywords"]}
+        for alias, canonical in SYNONYM_MAP.items():
+            self.assertFalse(
+                alias in all_kws and canonical in all_kws,
+                f'Both alias "{alias}" and canonical "{canonical}" are in taxonomy. '
+                f'Remove "{alias}" — it will be handled by SYNONYM_MAP.',
+            )
 
 
 class TestComputeMatch(unittest.TestCase):
@@ -534,6 +545,45 @@ class TestIdenticalTextScoring(unittest.TestCase):
     def test_both_empty_scores_zero(self):
         result = compute_match("", "")
         self.assertEqual(result["score"], 0)
+
+
+class TestSynonymExpansion(unittest.TestCase):
+    def test_postgres_matches_postgresql(self):
+        resume = clean_text("experience with postgres databases")
+        jd = clean_text("requires postgresql experience")
+        result = compute_match(resume, jd)
+        self.assertIn("postgresql", result["matched_by_category"].get("databases", []))
+        self.assertEqual(result["missing_count"], 0)
+
+    def test_js_matches_javascript(self):
+        resume = clean_text("proficient in js and react")
+        jd = clean_text("javascript and react developer")
+        result = compute_match(resume, jd)
+        self.assertIn("javascript", result["matched_by_category"].get("languages", []))
+
+    def test_k8s_matches_kubernetes(self):
+        resume = clean_text("deployed on k8s clusters")
+        jd = clean_text("kubernetes orchestration required")
+        result = compute_match(resume, jd)
+        self.assertIn(
+            "kubernetes", result["matched_by_category"].get("devops_cloud", [])
+        )
+
+    def test_bidirectional_synonym(self):
+        resume = clean_text("experience with postgresql")
+        jd = clean_text("requires postgres experience")
+        result = compute_match(resume, jd)
+        self.assertIn("postgresql", result["matched_by_category"].get("databases", []))
+
+    def test_normalize_preserves_non_synonyms(self):
+        text = "python developer with docker experience"
+        result = normalize_text(text)
+        self.assertIn("python", result)
+        self.assertIn("docker", result)
+
+    def test_multi_word_synonym(self):
+        result = normalize_text("deployed on amazon web services")
+        self.assertIn("aws", result)
 
 
 if __name__ == "__main__":
