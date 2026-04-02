@@ -18,6 +18,7 @@ from ats_scanner.analyzer import (
     segment_resume,
     extract_yoe_requirements,
     estimate_resume_yoe,
+    calculate_keyword_density,
     _score_to_grade,
     _analyze_sections,
     get_word_frequencies,
@@ -663,6 +664,33 @@ class TestDynamicKeywordExtraction(unittest.TestCase):
         self.assertIn("dynamic_jd_keywords", result)
         self.assertIn("dynamic_matched", result)
         self.assertIn("dynamic_missing", result)
+
+
+class TestKeywordDensity(unittest.TestCase):
+    def test_normal_density(self):
+        words = " ".join([f"word{i}" for i in range(100)])
+        text = f"python {words}"
+        keywords = {"python"}
+        result = calculate_keyword_density(text, keywords)
+        self.assertLess(result["density_pct"], 3.0)
+        self.assertEqual(result["status"], "good")
+
+    def test_stuffed_keyword_detected(self):
+        text = "python python python python python python developer"
+        keywords = {"python"}
+        result = calculate_keyword_density(text, keywords)
+        self.assertEqual(len(result["stuffed_keywords"]), 1)
+        self.assertEqual(result["stuffed_keywords"][0]["keyword"], "python")
+
+    def test_empty_text(self):
+        result = calculate_keyword_density("", {"python"})
+        self.assertEqual(result["density_pct"], 0.0)
+
+    def test_density_in_result(self):
+        resume = clean_text("python developer with react experience")
+        jd = clean_text("python react developer")
+        result = compute_match(resume, jd)
+        self.assertIn("keyword_density", result)
 
 
 class TestYoEDetection(unittest.TestCase):

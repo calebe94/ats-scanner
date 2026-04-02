@@ -713,6 +713,53 @@ def extract_ngrams_weighted(text: str, max_n: int = 4) -> Counter:
     return ngram_counts
 
 
+def calculate_keyword_density(text: str, keywords: Set[str]) -> Dict:
+    """
+    Calculate keyword density metrics. Flags keywords repeated >4 times
+    as stuffed (BM25 saturation point).
+    """
+    words = re.findall(r"\b[a-z][a-z0-9\+#\.]*\b", text.lower())
+    total_words = len(words)
+    if total_words == 0:
+        return {
+            "total_words": 0,
+            "keyword_mentions": 0,
+            "density_pct": 0.0,
+            "stuffed_keywords": [],
+            "status": "good",
+        }
+
+    keyword_mentions = 0
+    keyword_counts = Counter()
+    for kw in keywords:
+        if kw in SPECIAL_PATTERNS:
+            pattern = SPECIAL_PATTERNS[kw]
+        else:
+            pattern = r"\b" + re.escape(kw) + r"\b"
+        count = len(re.findall(pattern, text.lower()))
+        if count > 0:
+            keyword_counts[kw] = count
+            keyword_mentions += count
+
+    density = (keyword_mentions / total_words) * 100
+
+    stuffed = [
+        {"keyword": kw, "count": count}
+        for kw, count in keyword_counts.items()
+        if count > 4
+    ]
+
+    return {
+        "total_words": total_words,
+        "keyword_mentions": keyword_mentions,
+        "density_pct": round(density, 1),
+        "stuffed_keywords": stuffed,
+        "status": "good"
+        if density <= 3.0
+        else ("warning" if density <= 5.0 else "danger"),
+    }
+
+
 # ── YEARS OF EXPERIENCE DETECTION ─────────────────────────────────────────────
 
 YOE_PATTERN = re.compile(
@@ -1026,6 +1073,9 @@ def compute_match(resume_text: str, jd_text: str) -> Dict:
         "keyword_placement": keyword_placement,
         "yoe_requirements": extract_yoe_requirements(jd_text),
         "resume_yoe": estimate_resume_yoe(resume_text),
+        "keyword_density": calculate_keyword_density(
+            resume_lower, resume_flat | matched
+        ),
     }
 
 

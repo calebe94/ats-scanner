@@ -371,6 +371,32 @@ def print_report(
         p(f"    {icon}  {section_name.capitalize().ljust(15)}  {status}")
     p()
 
+    # ── KEYWORD DENSITY ──
+    density = result.get("keyword_density", {})
+    if density.get("total_words", 0) > 0:
+        p(section_line())
+        p(f"  {bold('KEYWORD DENSITY')}")
+        p(section_line())
+        p()
+        pct = density["density_pct"]
+        if density["status"] == "good":
+            color = C.BRIGHT_GREEN
+            msg = "Healthy density"
+        elif density["status"] == "warning":
+            color = C.BRIGHT_YELLOW
+            msg = "Slightly high — review for natural flow"
+        else:
+            color = C.BRIGHT_RED
+            msg = "Too high — ATS may flag as keyword stuffing"
+        p(f"  {label('Density:')}  {col(f'{pct}%', color)}  ({msg})")
+        p(f"  {label('Optimal range:')}  {col('2-3%', C.DIM)}")
+        if density["stuffed_keywords"]:
+            p()
+            p(col("  Over-repeated keywords (>4 times):", C.BRIGHT_YELLOW))
+            for item in density["stuffed_keywords"]:
+                p(f"    {col('!', C.BRIGHT_YELLOW)}  {item['keyword']} ({item['count']}x)")
+        p()
+
     # ── RECOMMENDATIONS ──
     p(section_line())
     p(f"  {bold('RECOMMENDATIONS')}")
