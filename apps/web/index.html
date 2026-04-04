@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ATS Scanner — Resume Analyzer</title>
+<title>ATS Scanner — See How Your Resume Matches the Job</title>
 </head>
 <body>
 
@@ -17,6 +17,8 @@
   </div>
 </header>
 
+<div id="hero-mount"></div>
+
 <div class="app">
   <div class="input-section">
     <div class="input-grid">
@@ -25,7 +27,7 @@
         <div class="ic-head">
           <div class="ic-dot"></div>
           <span class="ic-title">Your Resume</span>
-          <span class="ic-tip" data-tip="Include: contact info, education, work experience, projects, and skills section">?</span>
+          <span class="ic-tip" data-tip="For best results, include all sections: summary, skills, experience, education, and projects">?</span>
           <div class="tab-pair">
             <button class="tp-btn on" onclick="switchTab('resume','paste',this)">Paste</button>
             <button class="tp-btn" onclick="switchTab('resume','upload',this)">Upload</button>
@@ -77,7 +79,7 @@
         <div class="ic-head">
           <div class="ic-dot"></div>
           <span class="ic-title">Job Description</span>
-          <span class="ic-tip" data-tip="Include: required skills, responsibilities, nice-to-have skills, and qualifications">?</span>
+          <span class="ic-tip" data-tip="Paste the full posting — including required skills, responsibilities, qualifications, and nice-to-haves">?</span>
           <div class="tab-pair">
             <button class="tp-btn on" onclick="switchTab('jd','paste',this)">Paste</button>
             <button class="tp-btn" onclick="switchTab('jd','upload',this)">Upload</button>
@@ -161,7 +163,7 @@
       <div class="quick-stats">
         <div class="qs-box">
           <div class="qs-num" id="qsTotal" style="color:var(--muted3)">—</div>
-          <div class="qs-lbl">JD Keywords</div>
+          <div class="qs-lbl">Job Keywords</div>
         </div>
         <div class="qs-box">
           <div class="qs-num" id="qsMatched" style="color:var(--green)">—</div>
@@ -194,7 +196,7 @@
       <div class="panel">
         <div class="panel-head">
           <span class="ph-icon">+</span>
-          <span class="ph-title" style="color:var(--blue)">Bonus Skills</span>
+          <span class="ph-title" style="color:var(--blue)">Extra Skills</span>
           <span class="ph-count" id="bonusCount">0</span>
         </div>
         <div class="panel-body" id="bonusBody"></div>
@@ -202,15 +204,18 @@
       <div class="panel">
         <div class="panel-head">
           <span class="ph-icon">📋</span>
-          <span class="ph-title">Resume Sections</span>
+          <span class="ph-title">Resume Structure</span>
         </div>
         <div class="panel-body" id="sectionsBody"></div>
       </div>
       <div class="panel full">
         <div class="panel-head">
           <span class="ph-icon">◈</span>
-          <span class="ph-title" style="color:var(--yellow)">Key Phrases From JD Not In Resume</span>
+          <span class="ph-title" style="color:var(--yellow)">Missing Phrases</span>
           <span class="ph-count" id="phrasesCount">0</span>
+        </div>
+        <div class="panel-subtitle">
+          Important phrases from the job posting that aren't in your resume yet
         </div>
         <div class="panel-body" id="phrasesBody"></div>
       </div>
@@ -225,8 +230,13 @@
   </div>
 </div>
 
+<div id="learn-more-mount"></div>
+<div id="faq-mount"></div>
+<div id="final-cta-mount"></div>
+
 <footer>
   <a href="https://github.com/Calebe94/ats-scanner">ATS Scanner</a> &nbsp;·&nbsp;
+  <span>Open Source</span> &nbsp;·&nbsp;
   <a href="https://github.com/Calebe94/ats-scanner" target="_blank">calebe94</a> &nbsp;·&nbsp;
   <a href="https://blog.calebe.dev.br" target="_blank">blog.calebe.dev.br</a>
 </footer>

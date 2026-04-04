@@ -2,6 +2,7 @@ import "./style.css";
 import { runAnalysis } from "./scanner.js";
 import { renderResults } from "./ui.js";
 import { readFile } from "./file-reader.js";
+import { renderContent, getDemoData } from "./content.js";
 
 let resumeContent = "";
 let jdContent = "";
@@ -191,6 +192,29 @@ function runScan(): void {
   }, 350);
 }
 
+function runDemo(): void {
+  const resumeTA = $("resumeText") as HTMLTextAreaElement;
+  const jdTA = $("jdText") as HTMLTextAreaElement;
+
+  ["resume", "jd"].forEach((pre) => {
+    $(`${pre}-paste`).style.display = "";
+    $(`${pre}-upload`).style.display = "none";
+    const pair = $(`${pre}Card`).querySelector(".tab-pair")!;
+    pair.querySelectorAll<HTMLElement>(".tp-btn").forEach((b) => b.classList.remove("on"));
+    (pair.querySelector(".tp-btn:first-child") as HTMLElement).classList.add("on");
+    $(`${pre}Card`).classList.remove("upload-mode");
+  });
+
+  const demo = getDemoData();
+  resumeTA.value = demo.resume;
+  jdTA.value = demo.jd;
+  resumeContent = "";
+  jdContent = "";
+
+  $("resumeCard").scrollIntoView({ behavior: "smooth", block: "start" });
+  setTimeout(() => runScan(), 500);
+}
+
 /* Wire up all global event handlers */
 (window as Record<string, unknown>).switchTab = switchTab;
 (window as Record<string, unknown>).handleFile = handleFile;
@@ -201,3 +225,6 @@ function runScan(): void {
 (window as Record<string, unknown>).onDrop = onDrop;
 (window as Record<string, unknown>).changeFile = changeFile;
 (window as Record<string, unknown>).togglePreview = togglePreview;
+(window as Record<string, unknown>).runDemo = runDemo;
+
+renderContent();
