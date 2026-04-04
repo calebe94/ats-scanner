@@ -97,7 +97,7 @@ function generateRecs(r: MatchResult): string[] {
 export function renderResults(result: MatchResult): void {
   document.getElementById("results")!.style.display = "block";
 
-  const circ = 2 * Math.PI * 40;
+  const circ = 2 * Math.PI * 52;
   const offset = circ - (result.score / 100) * circ;
   const col = scoreColor(result.score);
   const ring = document.getElementById("scoreRing") as unknown as SVGCircleElement;
@@ -141,7 +141,7 @@ export function renderResults(result: MatchResult): void {
     ${Object.entries(result.sections).map(([k, v]) => `
       <div class="sec-item ${v ? "ok" : "miss"}">
         <span class="sec-icon">${SECTION_ICONS[k] ?? "·"}</span>
-        <span style="font-size:12px">${k.charAt(0).toUpperCase() + k.slice(1)}</span>
+        <span style="font-size:14px">${k.charAt(0).toUpperCase() + k.slice(1)}</span>
         <span class="sec-status ${v ? "ok" : "miss"}">${v ? "✓ Found" : "✗ Missing"}</span>
       </div>`).join("")}
   </div>`;
