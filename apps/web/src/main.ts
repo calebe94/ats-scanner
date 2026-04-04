@@ -2,7 +2,7 @@ import "./style.css";
 import { runAnalysis } from "./scanner.js";
 import { renderResults } from "./ui.js";
 import { readFile } from "./file-reader.js";
-import { DEMO_RESUME, DEMO_JD } from "./demo-data.js";
+import { renderContent, getDemoData } from "./content.js";
 
 let resumeContent = "";
 let jdContent = "";
@@ -205,8 +205,9 @@ function runDemo(): void {
     $(`${pre}Card`).classList.remove("upload-mode");
   });
 
-  resumeTA.value = DEMO_RESUME.trim();
-  jdTA.value = DEMO_JD.trim();
+  const demo = getDemoData();
+  resumeTA.value = demo.resume;
+  jdTA.value = demo.jd;
   resumeContent = "";
   jdContent = "";
 
@@ -225,3 +226,5 @@ function runDemo(): void {
 (window as Record<string, unknown>).changeFile = changeFile;
 (window as Record<string, unknown>).togglePreview = togglePreview;
 (window as Record<string, unknown>).runDemo = runDemo;
+
+renderContent();
