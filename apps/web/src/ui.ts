@@ -62,30 +62,30 @@ function generateRecs(r: MatchResult): string[] {
   const recs: string[] = [];
   const { score, missing_by_category: missingByCat, sections, bonus_skills: bonusSkills, dynamic_missing: dynamicMissing, keyword_placement: kwPlacement } = r;
 
-  if (score < 50) recs.push(`<strong>Critical:</strong> Your resume matches only ${score.toFixed(0)}% of this JD. Focus on adding the top missing keywords from each category.`);
+  if (score < 50) recs.push(`<strong>Critical:</strong> Your resume matches only ${score.toFixed(0)}% of this job posting. Focus on adding the most important missing keywords to your resume.`);
 
   for (const cat of ["languages", "frameworks", "databases", "devops_cloud"]) {
     if (missingByCat[cat]?.length) {
       const kws = missingByCat[cat].slice(0, 3).join(", ");
       const name = getCatLabel(cat);
       recs.push(
-        `<strong>${name}:</strong> Missing <em>${kws}</em>. ${!sections.skills ? "Add to Skills AND Experience for max ATS weight." : "Add these to your Skills section explicitly."}`,
+        `<strong>${name}:</strong> Missing <em>${kws}</em>. ${!sections.skills ? "Add to both your Skills and Experience sections for maximum impact." : "List these clearly in your Skills section."}`,
       );
     }
   }
 
-  if (!sections.summary) recs.push("<strong>Add a Summary:</strong> A professional summary lets you front-load 4-6 core keywords. ATS systems weight summary keywords highly.");
-  if (!sections.skills) recs.push("<strong>Add a Skills Section:</strong> A dedicated Skills section gets a 1.5x weight multiplier in most ATS systems.");
+  if (!sections.summary) recs.push("<strong>Add a Summary:</strong> A professional summary lets you front-load 4-6 core keywords. A summary lets hiring software find your key strengths immediately.");
+  if (!sections.skills) recs.push("<strong>Add a Skills Section:</strong> A dedicated Skills section carries extra weight when your resume is screened.");
   if (!sections.projects && score < 75) recs.push("<strong>Add Projects:</strong> A Projects section lets you demonstrate skills with context. \"Built X using Python and React\" scores higher than just listing them.");
 
   if (kwPlacement) {
     const skillsKws = new Set(kwPlacement.skills ?? []);
     const expKws = new Set(kwPlacement.experience ?? []);
     const onlySkills = [...skillsKws].filter((k) => !expKws.has(k));
-    if (onlySkills.length > 2) recs.push(`<strong>Prove Your Skills:</strong> <em>${onlySkills.slice(0, 3).join(", ")}</em> appear only in Skills. Mention them in Experience bullets too — ATS rewards the "Claim + Proof" pattern.`);
+    if (onlySkills.length > 2) recs.push(`<strong>Prove Your Skills:</strong> <em>${onlySkills.slice(0, 3).join(", ")}</em> appear only in Skills. Mention them in Experience bullets too — showing skills in context is more convincing than listing them alone.`);
   }
 
-  if (dynamicMissing?.length > 2) recs.push(`<strong>JD-Specific Terms:</strong> The JD mentions <em>${dynamicMissing.slice(0, 3).join(", ")}</em> which aren't standard keywords. If you have experience, add them.`);
+  if (dynamicMissing?.length > 2) recs.push(`<strong>Job-Specific Terms:</strong> The job posting mentions <em>${dynamicMissing.slice(0, 3).join(", ")}</em> which are specific to this role. If you have this experience, mention it in your resume.`);
 
   if (score >= 85) recs.push("<strong>Excellent Match:</strong> Strong alignment! Focus your cover letter on the 1-2 remaining gaps.");
   else if (score >= 75) recs.push("<strong>Good Match:</strong> Solid foundation. Address the missing keywords above for top-tier ATS scoring.");
@@ -117,7 +117,7 @@ export function renderResults(result: MatchResult): void {
   document.getElementById("scorePills")!.innerHTML = `
     <span class="pill pill-g">✓ ${result.matched_count} matched</span>
     <span class="pill pill-r">✗ ${result.missing_count} missing</span>
-    ${result.bonus_skills.length ? `<span class="pill pill-b">+ ${result.bonus_skills.length} bonus</span>` : ""}
+    ${result.bonus_skills.length ? `<span class="pill pill-b">+ ${result.bonus_skills.length} extra</span>` : ""}
     <span class="pill pill-o">Grade ${result.grade}</span>`;
 
   document.getElementById("qsTotal")!.textContent = String(result.total_jd_keywords);
@@ -134,7 +134,7 @@ export function renderResults(result: MatchResult): void {
   if (result.bonus_skills.length) {
     bonusEl.innerHTML = `<div class="tags-row">${result.bonus_skills.map((k, i) => `<span class="tag tag-bonus" style="animation-delay:${i * 0.03}s">${k}</span>`).join("")}</div>`;
   } else {
-    bonusEl.innerHTML = '<div class="no-items">No bonus skills found.</div>';
+    bonusEl.innerHTML = '<div class="no-items">No extra skills detected beyond what\'s listed in the job posting.</div>';
   }
 
   document.getElementById("sectionsBody")!.innerHTML = `<div class="section-grid">
