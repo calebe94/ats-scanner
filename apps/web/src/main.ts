@@ -74,6 +74,11 @@ function showFileError(which: string, msg: string): void {
 async function handleFile(which: string, input: HTMLInputElement): Promise<void> {
   const file = input.files?.[0];
   if (!file) return;
+
+  const pre = which === "resume" ? "resume" : "jd";
+  const uploadBtn = $(`${pre}Card`).querySelector(".tab-pair .tp-btn:last-child") as HTMLElement;
+  switchTab(which, "upload", uploadBtn);
+
   showUploadLoading(which);
 
   try {
