@@ -18,6 +18,20 @@ import {
   SECTION_HEADERS,
 } from "./taxonomy.js";
 
+export function cosineSimilarity(vecA: number[], vecB: number[]): number {
+  if (vecA.length !== vecB.length) throw new Error("Vector length mismatch");
+  let dot = 0;
+  let normA = 0;
+  let normB = 0;
+  for (let i = 0; i < vecA.length; i++) {
+    dot += vecA[i] * vecB[i];
+    normA += vecA[i] * vecA[i];
+    normB += vecB[i] * vecB[i];
+  }
+  const denom = Math.sqrt(normA) * Math.sqrt(normB);
+  return denom === 0 ? 0 : dot / denom;
+}
+
 export function normalizeText(text: string): string {
   let result = text;
   for (const [alias, canonical] of SORTED_SYNONYMS) {
@@ -302,6 +316,69 @@ export function estimateResumeYoe(
     total_years: Math.round(totalFrac),
     date_ranges: merged.map(([s, e]) => [Math.round(s), Math.round(e)]),
     has_dates: true,
+  };
+}
+
+export interface KeywordDistribution {
+  mean: number;
+  stdDev: number;
+  anomalies: Array<{
+    section: string;
+    density: number;
+    zScore: number;
+  }>;
+  isNatural: boolean;
+}
+
+export function analyzeKeywordDistribution(
+  resumeText: string,
+  keywords: Set<string>,
+): KeywordDistribution {
+  const sections = segmentResume(resumeText);
+  const densities: { section: string; density: number }[] = [];
+
+  for (const [name, text] of Object.entries(sections)) {
+    const words = text.match(/\b[a-z][a-z0-9+#.]*\b/gi) ?? [];
+    if (words.length === 0) continue;
+    let kwCount = 0;
+    for (const kw of keywords) {
+      const pat =
+        SPECIAL_PATTERNS[kw] ??
+        new RegExp("\\b" + kw.replace(/[+.]/g, "\\$&") + "\\b", "gi");
+      kwCount += (text.match(pat) ?? []).length;
+    }
+    densities.push({ section: name, density: kwCount / words.length });
+  }
+
+  if (densities.length <= 1) {
+    return {
+      mean: densities[0]?.density ?? 0,
+      stdDev: 0,
+      anomalies: [],
+      isNatural: true,
+    };
+  }
+
+  const mean =
+    densities.reduce((s, d) => s + d.density, 0) / densities.length;
+  const variance =
+    densities.reduce((s, d) => s + (d.density - mean) ** 2, 0) /
+    densities.length;
+  const stdDev = Math.sqrt(variance);
+
+  const anomalies = densities
+    .map((d) => ({
+      section: d.section,
+      density: d.density,
+      zScore: stdDev > 0 ? (d.density - mean) / stdDev : 0,
+    }))
+    .filter((d) => d.zScore > 2.0);
+
+  return {
+    mean,
+    stdDev,
+    anomalies,
+    isNatural: anomalies.length === 0,
   };
 }
 

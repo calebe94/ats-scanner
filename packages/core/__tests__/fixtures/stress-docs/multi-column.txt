@@ -1,0 +1,10 @@
+Python          | Docker
+React           | AWS
+JavaScript      | Kubernetes
+TypeScript      | Terraform
+PostgreSQL      | Git
+
+Senior Software Engineer            Cloud Platform Lead
+Jan 2020 - Present                  Mar 2018 - Dec 2019
+Built APIs with Python and React    Deployed on AWS using Docker
+Managed PostgreSQL databases        Orchestrated with Kubernetes

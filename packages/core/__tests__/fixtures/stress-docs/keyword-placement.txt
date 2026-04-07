@@ -1,0 +1,16 @@
+Summary
+Experienced software developer with python and react expertise.
+
+Skills
+python, react, docker, aws, postgresql, kubernetes, git, javascript
+
+Experience
+Software Engineer at TechCorp
+- Built web applications using python and react
+- Deployed services with docker on aws
+- Managed postgresql databases
+- Orchestrated containers with kubernetes
+
+Education
+Bachelor of Computer Science
+Coursework: python, react, javascript

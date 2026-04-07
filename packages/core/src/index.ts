@@ -11,6 +11,8 @@ export type {
   SkillTaxonomy,
 } from "./types.js";
 
+export type { KeywordDistribution } from "./analyzer.js";
+
 export {
   SKILL_TAXONOMY,
   SYNONYM_MAP,
@@ -22,6 +24,8 @@ export {
 } from "./taxonomy.js";
 
 export {
+  analyzeKeywordDistribution,
+  cosineSimilarity,
   normalizeText,
   extractKeywords,
   getWordFrequencies,

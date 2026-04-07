@@ -1,0 +1,14 @@
+Technical Skills
+▸ Python
+▸ React
+◆ Docker
+● AWS
+★ Kubernetes
+🔧 Git
+💻 JavaScript
+
+Experience
+▸ Built web applications using Python and React
+◆ Deployed containers with Docker on AWS
+● Managed Kubernetes clusters
+★ Version control with Git

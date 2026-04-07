@@ -1,5 +1,6 @@
 import pc from "picocolors";
 import type { MatchResult } from "@ats-scanner/core";
+import { analyzeKeywordDistribution } from "@ats-scanner/core";
 
 const WIDTH = 72;
 
@@ -292,6 +293,44 @@ export function printReport(
       }
     }
     p();
+  }
+
+  const resumeText = resumeName;
+  const allMatchedKws = new Set(
+    Object.values(result.matched_by_category).flat(),
+  );
+  if (allMatchedKws.size > 0) {
+    const dist = analyzeKeywordDistribution(
+      result.keyword_placement
+        ? Object.entries(result.keyword_placement)
+            .map(([section, kws]) => `${section}\n${kws.join(" ")}`)
+            .join("\n")
+        : "",
+      allMatchedKws,
+    );
+    if (!dist.isNatural && dist.anomalies.length > 0) {
+      p(sectionLine());
+      p(`  ${c("KEYWORD DISTRIBUTION", pc.bold)}`);
+      p(sectionLine());
+      p();
+      p(c("  Anomalous keyword concentration detected:", pc.yellow));
+      p();
+      for (const anomaly of dist.anomalies) {
+        p(
+          `    ${c("!", pc.yellow)}  ${anomaly.section} section: ` +
+            `density ${(anomaly.density * 100).toFixed(1)}% ` +
+            `(z-score: ${anomaly.zScore.toFixed(1)})`,
+        );
+      }
+      p();
+      p(
+        c(
+          "  Keywords concentrated in one section may indicate stuffing.",
+          pc.dim,
+        ),
+      );
+      p();
+    }
   }
 
   p(sectionLine());
