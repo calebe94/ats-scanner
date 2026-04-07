@@ -67,4 +67,6 @@ export interface MatchResult {
   yoe_requirements: YoeRequirement[];
   resume_yoe: ResumeYoe;
   keyword_density: KeywordDensityResult;
+  semantic_similarity?: number;
+  combined_semantic_score?: number;
 }

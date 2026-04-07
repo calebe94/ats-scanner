@@ -216,15 +216,15 @@ function runDemo(): void {
 }
 
 /* Wire up all global event handlers */
-(window as Record<string, unknown>).switchTab = switchTab;
-(window as Record<string, unknown>).handleFile = handleFile;
-(window as Record<string, unknown>).cardClick = cardClick;
-(window as Record<string, unknown>).runScan = runScan;
-(window as Record<string, unknown>).clearAll = clearAll;
-(window as Record<string, unknown>).onDrag = onDrag;
-(window as Record<string, unknown>).onDrop = onDrop;
-(window as Record<string, unknown>).changeFile = changeFile;
-(window as Record<string, unknown>).togglePreview = togglePreview;
-(window as Record<string, unknown>).runDemo = runDemo;
+(window as unknown as Record<string, unknown>).switchTab = switchTab;
+(window as unknown as Record<string, unknown>).handleFile = handleFile;
+(window as unknown as Record<string, unknown>).cardClick = cardClick;
+(window as unknown as Record<string, unknown>).runScan = runScan;
+(window as unknown as Record<string, unknown>).clearAll = clearAll;
+(window as unknown as Record<string, unknown>).onDrag = onDrag;
+(window as unknown as Record<string, unknown>).onDrop = onDrop;
+(window as unknown as Record<string, unknown>).changeFile = changeFile;
+(window as unknown as Record<string, unknown>).togglePreview = togglePreview;
+(window as unknown as Record<string, unknown>).runDemo = runDemo;
 
 renderContent();

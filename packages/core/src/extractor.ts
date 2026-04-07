@@ -8,6 +8,8 @@ export function cleanText(text: string): string {
 
 export function stripLatex(text: string): string {
   text = text.replace(/(?<!\\)%.*/g, "");
+  text = text.replace(/\$\$[^$]*\$\$/g, " ");
+  text = text.replace(/\$[^$]*\$/g, " ");
   text = text.replace(/\\(?:begin|end)\{[^}]*\}/g, "");
   text = text.replace(
     /\\(?:documentclass|usepackage|input|include|bibliography|bibliographystyle)(?:\[[^\]]*\])?\{[^}]*\}/g,

@@ -1,0 +1,5 @@
+Proficient in "JavaScript" and 'TypeScript'
+Software Engineer — Jan 2020 — Present
+Built high‑performance APIs with python and react
+Used non‑breaking spaces and em—dashes throughout
+Deployed on AWS using docker containers
