@@ -1,11 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "rootDir": ".",
-    "paths": {
-      "@ats-scanner/core": ["../../packages/core/src"]
-    }
+    "outDir": "dist"
   },
   "include": ["src/**/*.ts"],
   "exclude": ["dist", "node_modules"]
